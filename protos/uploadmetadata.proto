@@ -1,16 +1,19 @@
 syntax = "proto3";
 
 message UploadMetadataItem {
-  // Destination file path on the client. Example: "/tmp/data/module.so"
-  string file_location = 1;
+  // Source file path on the client. Example: "/csh/module.so"
+  string file_src = 1;
+  
+  // Destination file path on the client. Example: "/usr/share/pipeline/module.so"
+  string file_dest = 2;
 
-  uint32 dtp_server_address = 2;
+  uint32 dtp_server_address = 3;
 
-  uint32 payload_id = 3;
+  uint32 payload_id = 4;
 
   // Using fixed32 is efficient for 32-bit checksums like CRC32.
   // For larger hashes like SHA-256, you might use the 'bytes' type instead.
-  fixed32 checksum = 4;
+  fixed32 checksum = 5;
 }
 
 message UploadMetadata {
