@@ -366,10 +366,10 @@ int main(int argc, char *argv[])
 			printf("\t%s - [DEBUG] Valid DTP request. %s\n", "\x1B[33m", "\x1B[0m");
 			
 			char file_src[50];
-			memcpy(&file_src, &request->data[0], sizeof(file_src) + 1);
+			memcpy(&file_src, &request->data[0], sizeof(file_src));
 
 			char file_dst[50];
-			memcpy(&file_dst, &request->data[1], sizeof(file_dst) + 1);
+			memcpy(&file_dst, &request->data[1], sizeof(file_dst));
 			
 			uint8_t dtp_server_addr;
 			memcpy(&dtp_server_addr, &request->data[2], sizeof(uint8_t));
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
 			uint16_t payload_id;
 			memcpy(&payload_id, &request->data[3], sizeof(uint16_t));
 
-			run_in_thread(dtp_client_worker, &opts, "dtp-client");
+			//run_in_thread(dtp_client_worker, &opts, "dtp-client");
 			
 		}
 
