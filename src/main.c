@@ -26,7 +26,7 @@
 #include "dtp/dtp_log.h"
 #include "dtp/dtp_session.h"
 
-#define PORT 13
+#define PORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -296,6 +296,7 @@ int main(int argc, char *argv[])
 	csp_print("Initialising CSP\n");
 
 	/* Init CSP */
+	csp_conf.hostname = HOSTNAME;
 	csp_init();
 
 	/* Start router */
