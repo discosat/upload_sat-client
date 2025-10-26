@@ -342,6 +342,8 @@ int main(int argc, char *argv[])
 	csp_bind(&sock, PORT);
 	csp_listen(&sock, 1); // This allows only one simultaneous connection
 
+	dtp_thread_args_t opts;
+
 	csp_conn_t *conn;
 
 	while (1)
@@ -373,6 +375,8 @@ int main(int argc, char *argv[])
 
 			uint16_t payload_id;
 			memcpy(&payload_id, &request->data[3], sizeof(uint16_t));
+
+			run_in_thread(dtp_client_worker, &opts, "dtp-client");
 			
 		}
 
