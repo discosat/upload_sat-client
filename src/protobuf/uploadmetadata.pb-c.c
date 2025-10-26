@@ -6,7 +6,7 @@
 #define PROTOBUF_C__NO_DEPRECATED
 #endif
 
-#include "protos/uploadmetadata.pb-c.h"
+#include "uploadmetadata.pb-c.h"
 void   upload_metadata_item__init
                      (UploadMetadataItem         *message)
 {
