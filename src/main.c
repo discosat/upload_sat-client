@@ -26,7 +26,7 @@
 #include "dtp/dtp_log.h"
 #include "dtp/dtp_session.h"
 
-#define PORT 10
+#define SERVERPORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -338,53 +338,83 @@ int main(int argc, char *argv[])
 	/* Start client work */
 	csp_print("Client started\n");
 
-	static csp_socket_t sock = {0};
-	sock.opts = CSP_O_RDP;
-	csp_bind(&sock, PORT);
-	csp_listen(&sock, 1); // This allows only one simultaneous connection
+	csp_socket_t sock = {0};
+    csp_bind(&sock, CSP_ANY);
+    csp_listen(&sock, 10);
 
-	dtp_thread_args_t opts;
+    /* This loop now runs forever, as intended */
+    while (1)
+    {
+        csp_conn_t *conn;
+        if ((conn = csp_accept(&sock, CSP_MAX_TIMEOUT)) == NULL)
+        {
+            /* Timed out, continue listening */
+            continue;
+        }
 
-	csp_conn_t *conn;
+        csp_packet_t *packet;
+        while ((packet = csp_read(conn, 100)) != NULL)
+        {
+            int dport = csp_conn_dport(conn);
 
-	while (1)
-	{
-		if ((conn = csp_accept(&sock, 10000)) == NULL)
-		{
-			continue;
-		}
+            switch (dport)
+            {
+            case SERVER_PORT: // Your application port (10)
+                printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
-		csp_packet_t *request = csp_read(conn, 50);
-		printf("\t%s - [DEBUG] Reading packet from connection... %s\n", "\x1B[33m", "\x1B[0m");
+                /* A. Allocate memory for the thread arguments */
+                dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
+                if (!opts) {
+                    csp_print("Failed to allocate memory for DTP options\n");
+                    csp_buffer_free(packet);
+                    continue; // Skip to next packet
+                }
 
-		if (request->length < 5)
-		{
-			csp_print("Invalid DTP upload request: too short\n");
-		}
-		else
-		{
-			printf("\t%s - [DEBUG] Valid DTP request. %s\n", "\x1B[33m", "\x1B[0m");
-			
-			char file_src[50];
-			memcpy(&file_src, &request->data[0], sizeof(file_src));
+                /* B. Correctly unpack the data using offsets */
+                size_t offset = 0;
+                char file_src_name[50];
+                char file_dst_name[50];
 
-			char file_dst[50];
-			memcpy(&file_dst, &request->data[1], sizeof(file_dst));
-			
-			uint8_t dtp_server_addr;
-			memcpy(&dtp_server_addr, &request->data[2], sizeof(uint8_t));
+                memcpy(&file_src_name, packet->data + offset, sizeof(file_src_name));
+                offset += sizeof(file_src_name);
 
-			uint16_t payload_id;
-			memcpy(&payload_id, &request->data[3], sizeof(uint16_t));
+                memcpy(&file_dst_name, packet->data + offset, sizeof(file_dst_name));
+                offset += sizeof(file_dst_name);
 
-			//run_in_thread(dtp_client_worker, &opts, "dtp-client");
-			
-		}
+                memcpy(&opts->server, packet->data + offset, sizeof(uint8_t));
+                offset += sizeof(uint8_t);
 
-		usleep(100000);
+                memcpy(&opts->payload_id, packet->data + offset, sizeof(uint16_t));
+                
+                // You will need to set the other opts fields here too!
+                opts->timeout = 10000;
+                opts->mtu = 256;
+                opts->resume = 0; 
+                opts->throughput = 0; // Let libdtp decide
 
-		/* Wait for execution to end (ctrl+c) */
+                /* C. Start the DTP client worker in a new thread */
+                pthread_t dtp_thread;
+                if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0) {
+                    csp_print("Failed to create DTP worker thread\n");
+                    free(opts); // Don't forget to free if thread creation fails
+                } else {
+                    pthread_detach(dtp_thread); // Allow thread to clean up itself
+                }
 
-		return ret;
-	}
+                csp_buffer_free(packet);
+                break;
+
+            default:
+                /* For pings and other management traffic, use the service handler */
+                printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
+                csp_service_handler(packet);
+                break;
+            }
+        }
+
+        /* Close the connection when done */
+        csp_close(conn);
+    }
+
+    return ret; 
 }
