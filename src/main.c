@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 				opts->timeout = 10000;
 				opts->mtu = 256;
 				opts->resume = 0;
-				opts->throughput = 0; // Let libdtp decide
+				opts->throughput = 1024; 
 
 				upload_metadata_item__free_unpacked(metadata, NULL);
 
