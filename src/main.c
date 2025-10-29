@@ -25,6 +25,7 @@
 #include "dtp/dtp.h"
 #include "dtp/dtp_log.h"
 #include "dtp/dtp_session.h"
+#include "protobuf/uploadmetadata.pb-c.h"
 
 #define SERVERPORT 10
 
@@ -79,7 +80,15 @@ static void *dtp_client_worker(void *param)
 	dtp_thread_args_t *opts = (dtp_thread_args_t *)param;
 	dtp_t *session;
 
-	csp_print("Starting DTP client for payload %u from server %u\n", opts->payload_id, opts->server_addr);
+	csp_print("Starting DTP client for payload %u from server %u\n", opts->payload_id, opts->server);
+
+	printf("\t%s - [DEBUG] Following values from 'opts' to be sent:%s\n", "\x1B[33m", "\x1B[0m");
+	printf("\t\t%s * server: %u %s\n", "\x1B[33m", opts->server, "\x1B[0m");
+	printf("\t\t%s * throughput: %u %s\n", "\x1B[33m", opts->throughput, "\x1B[0m");
+	printf("\t\t%s * payload_id: %u %s\n", "\x1B[33m", opts->payload_id, "\x1B[0m");
+	printf("\t\t%s * mtu: %u %s\n", "\x1B[33m", opts->mtu, "\x1B[0m");
+	printf("\t\t%s * resume: %u %s\n", "\x1B[33m", opts->resume, "\x1B[0m");
+	printf("\t\t%s * session: %p %s\n", "\x1B[33m", session, "\x1B[0m");
 
 	// Run the DTP client. This will block until the transfer is complete or fails.
 	dtp_result result = dtp_client_main(opts->server, opts->throughput, opts->timeout, opts->payload_id, opts->mtu, opts->resume, &session);
@@ -339,82 +348,89 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-    csp_bind(&sock, CSP_ANY);
-    csp_listen(&sock, 10);
+	csp_bind(&sock, CSP_ANY);
+	csp_listen(&sock, 10);
 
-    /* This loop now runs forever, as intended */
-    while (1)
-    {
-        csp_conn_t *conn;
-        if ((conn = csp_accept(&sock, CSP_MAX_TIMEOUT)) == NULL)
-        {
-            /* Timed out, continue listening */
-            continue;
-        }
+	/* This loop now runs forever, as intended */
+	while (1)
+	{
+		csp_conn_t *conn;
+		if ((conn = csp_accept(&sock, CSP_MAX_TIMEOUT)) == NULL)
+		{
+			/* Timed out, continue listening */
+			continue;
+		}
 
-        csp_packet_t *packet;
-        while ((packet = csp_read(conn, 100)) != NULL)
-        {
-            int dport = csp_conn_dport(conn);
+		csp_packet_t *packet;
+		while ((packet = csp_read(conn, 100)) != NULL)
+		{
+			int dport = csp_conn_dport(conn);
 
-            switch (dport)
-            {
-            case SERVER_PORT: // Your application port (10)
-                printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+			switch (dport)
+			{
+			case SERVER_PORT:
+				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
-                /* A. Allocate memory for the thread arguments */
-                dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
-                if (!opts) {
-                    csp_print("Failed to allocate memory for DTP options\n");
-                    csp_buffer_free(packet);
-                    continue; // Skip to next packet
-                }
+				UploadMetadataItem *metadata;
+				metadata = upload_metadata_item__unpack(NULL, packet->length, packet->data);
 
-                /* B. Correctly unpack the data using offsets */
-                size_t offset = 0;
-                char file_src_name[50];
-                char file_dst_name[50];
+				if (metadata == NULL)
+				{
+					printf("\t%s - [ERROR] Failed to unpack Protobuf metadata message! %s\n", "\x1B[31m", "\x1B[0m");
+					csp_buffer_free(packet);
+					continue;
+				}
 
-                memcpy(&file_src_name, packet->data + offset, sizeof(file_src_name));
-                offset += sizeof(file_src_name);
+				/* A. Allocate memory for the thread arguments */
+				dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
+				if (!opts)
+				{
+					printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
+					upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
+					csp_buffer_free(packet);
+					continue;
+				}
 
-                memcpy(&file_dst_name, packet->data + offset, sizeof(file_dst_name));
-                offset += sizeof(file_dst_name);
-
-                memcpy(&opts->server, packet->data + offset, sizeof(uint8_t));
-                offset += sizeof(uint8_t);
-
-                memcpy(&opts->payload_id, packet->data + offset, sizeof(uint16_t));
+				opts->server = metadata->dtp_server_address;
+                opts->payload_id = metadata->payload_id;
                 
-                // You will need to set the other opts fields here too!
-                opts->timeout = 10000;
-                opts->mtu = 256;
-                opts->resume = 0; 
-                opts->throughput = 0; // Let libdtp decide
+                // strncpy(file_src_name, metadata->file_src, sizeof(file_src_name) - 1);
+                // strncpy(file_dst_name, metadata->file_dest, sizeof(file_dst_name) - 1);
 
-                /* C. Start the DTP client worker in a new thread */
-                pthread_t dtp_thread;
-                if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0) {
-                    csp_print("Failed to create DTP worker thread\n");
-                    free(opts); // Don't forget to free if thread creation fails
-                } else {
-                    pthread_detach(dtp_thread); // Allow thread to clean up itself
-                }
+				// You will need to set the other opts fields here too!
+				opts->timeout = 10000;
+				opts->mtu = 256;
+				opts->resume = 0;
+				opts->throughput = 0; // Let libdtp decide
 
-                csp_buffer_free(packet);
-                break;
+				upload_metadata_item__free_unpacked(metadata, NULL);
 
-            default:
-                /* For pings and other management traffic, use the service handler */
-                printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
-                csp_service_handler(packet);
-                break;
-            }
-        }
+				/* C. Start the DTP client worker in a new thread */
+				pthread_t dtp_thread;
+				if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
+				{
+					printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
+					free(opts); // Don't forget to free if thread creation fails
+				}
+				else
+				{
+					pthread_detach(dtp_thread); // Allow thread to clean up itself
+				}
 
-        /* Close the connection when done */
-        csp_close(conn);
-    }
+				csp_buffer_free(packet);
+				break;
 
-    return ret; 
+			default:
+				/* For pings and other management traffic, use the service handler */
+				printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
+				csp_service_handler(packet);
+				break;
+			}
+		}
+
+		/* Close the connection when done */
+		csp_close(conn);
+	}
+
+	return ret;
 }
