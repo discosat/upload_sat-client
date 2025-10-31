@@ -2,7 +2,6 @@
  * Copied and edited from: https://github.com/spaceinventor/libcsp/blob/60e4804ea8451e6202ce2c5c5abc0342ad3b55a4/examples/csp_client.c
  */
 
-#include <csp/csp_debug.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -10,22 +9,24 @@
 #include <time.h>
 #include <pthread.h>
 #include <stdio.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <csp/csp_debug.h>
 #include <csp/csp.h>
 #include <csp/drivers/usart.h>
 #include <csp/drivers/can_socketcan.h>
 #include <csp/interfaces/csp_if_zmqhub.h>
+#include <slash/optparse.h>
+#include <slash/dflopt.h>
 
 #include "vmem_dtp_server.h"
-
 #include "dtp/dtp.h"
 #include "dtp/dtp_log.h"
 #include "dtp/dtp_session.h"
 #include "protobuf/uploadmetadata.pb-c.h"
+#include "session/segments_utils.h"
 
 #define SERVERPORT 10
 
@@ -64,7 +65,8 @@ int router_start(void)
 typedef struct
 {
 	uint32_t server_addr;
-	FILE *output_file;
+	char *file_src_name[256];
+	char *file_dst_name[256];
 
 	int color;
 	int resume;
@@ -79,6 +81,7 @@ static void *dtp_client_worker(void *param)
 {
 	dtp_thread_args_t *opts = (dtp_thread_args_t *)param;
 	dtp_t *session;
+	int *slash_res = NULL;
 
 	csp_print("Starting DTP client for payload %u from server %u\n", opts->payload_id, opts->server);
 
@@ -91,18 +94,27 @@ static void *dtp_client_worker(void *param)
 	printf("\t\t%s * session: %p %s\n", "\x1B[33m", session, "\x1B[0m");
 
 	// Run the DTP client. This will block until the transfer is complete or fails.
+	//file_dest = opts->file_dst_name;
 	dtp_result result = dtp_client_main(opts->server, opts->throughput, opts->timeout, opts->payload_id, opts->mtu, opts->resume, &session);
 
-	if (result == DTP_ERR)
+	if (DTP_ERR == result)
 	{
-		csp_print("DTP client failed: %s\n", dtp_strerror(dtp_errno(NULL)));
-		// The on_end hook should be called by libdtp on failure to clean up resources.
+		switch (dtp_errno(NULL))
+		{
+		case DTP_EINVAL:
+			*slash_res = SLASH_EINVAL;
+		default:
+			printf("%s\n", dtp_strerror(dtp_errno(NULL)));
+			*slash_res = SLASH_SUCCESS;
+		}
 	}
 	else
 	{
-		csp_print("DTP client completed successfully.\n");
+		dtp_serialize_session(session, NULL);
 		dtp_release_session(session);
 	}
+
+	printf("\t%s - [DEBUG] dtp_client_worker finished!%s\n", "\x1B[33m", "\x1B[0m");
 
 	// Free the thread arguments
 	free(opts);
@@ -392,18 +404,24 @@ int main(int argc, char *argv[])
 				}
 
 				opts->server = metadata->dtp_server_address;
-                opts->payload_id = metadata->payload_id;
-                
-                // strncpy(file_src_name, metadata->file_src, sizeof(file_src_name) - 1);
-                // strncpy(file_dst_name, metadata->file_dest, sizeof(file_dst_name) - 1);
+				opts->payload_id = metadata->payload_id;
+
+				strncpy(opts->file_src_name, metadata->file_src, sizeof(opts->file_src_name) - 1);
+				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+
+				strncpy(opts->file_dst_name, metadata->file_dest, sizeof(opts->file_dst_name) - 1);
+				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
 
 				// You will need to set the other opts fields here too!
 				opts->timeout = 10000;
 				opts->mtu = 256;
 				opts->resume = 0;
-				opts->throughput = 1024; 
+				opts->throughput = 1024;
 
 				upload_metadata_item__free_unpacked(metadata, NULL);
+
+				/* This is very important, else the default no-op hooks will be used */
+				default_session_hooks = apm_session_hooks;
 
 				/* C. Start the DTP client worker in a new thread */
 				pthread_t dtp_thread;

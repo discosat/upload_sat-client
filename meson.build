@@ -12,6 +12,8 @@ project('upload_client', 'c', version: '0.1.0', subproject_dir: 'lib',
 sources = files(
     'src/main.c',
     'src/protobuf/uploadmetadata.pb-c.c',
+        'src/session/segments_utils.c',
+    'src/session/session_hooks.c',
 )
 
 dirs = include_directories(
@@ -24,7 +26,9 @@ csp_dep = dependency('csp', fallback: ['csp', 'csp_dep'])
 m_dep = meson.get_compiler('c').find_library('m', required : false)
 dtp_client_dep = dependency('dtp_client', fallback: ['dtp', 'dtp_client_dep'], required: true)
 proto_c_dep = dependency('libprotobuf-c', fallback: ['protobuf-c', 'proto_c_dep'])
-deps = [csp_dep, dtp_client_dep, proto_c_dep, m_dep]
+param_dep = dependency('param', fallback : ['param', 'param_dep']).as_link_whole()
+slash_dep = dependency('slash', fallback: ['slash', 'slash_dep'], required: false).partial_dependency(links: false, includes: true)
+deps = [csp_dep, dtp_client_dep, proto_c_dep, param_dep, slash_dep, m_dep]
 
 c_args = ['-DHOSTNAME="@0@"'.format(get_option('hostname'))]
 
