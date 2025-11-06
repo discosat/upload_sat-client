@@ -94,7 +94,7 @@ static void *dtp_client_worker(void *param)
 	printf("\t\t%s * session: %p %s\n", "\x1B[33m", session, "\x1B[0m");
 
 	// Run the DTP client. This will block until the transfer is complete or fails.
-	//file_dest = opts->file_dst_name;
+	// file_dest = opts->file_dst_name;
 	dtp_result result = dtp_client_main(opts->server, opts->throughput, opts->timeout, opts->payload_id, opts->mtu, opts->resume, &session);
 
 	if (DTP_ERR == result)
@@ -393,62 +393,92 @@ int main(int argc, char *argv[])
 					continue;
 				}
 
-				/* A. Allocate memory for the thread arguments */
-				dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
-				if (!opts)
+				uint8_t cmd = packet->data[0];
+
+				switch (cmd)
 				{
-					printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
-					upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
+				case 0x01: // If we want to upload
+				{
+					/* A. Allocate memory for the thread arguments */
+					dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
+					if (!opts)
+					{
+						printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
+						upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
+						csp_buffer_free(packet);
+						continue;
+					}
+
+					opts->server = metadata->dtp_server_address;
+					opts->payload_id = metadata->payload_id;
+
+					strncpy(opts->file_src_name, metadata->file_src, sizeof(opts->file_src_name) - 1);
+					opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+
+					strncpy(opts->file_dst_name, metadata->file_dest, sizeof(opts->file_dst_name) - 1);
+					opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+
+					// You will need to set the other opts fields here too!
+					opts->timeout = 10000;
+					opts->mtu = 256;
+					opts->resume = 0;
+					opts->throughput = 1024;
+
+					upload_metadata_item__free_unpacked(metadata, NULL);
+
+					/* This is very important, else the default no-op hooks will be used */
+					default_session_hooks = apm_session_hooks;
+
+					/* C. Start the DTP client worker in a new thread */
+					pthread_t dtp_thread;
+					if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
+					{
+						printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
+						free(opts); // Don't forget to free if thread creation fails
+					}
+					else
+					{
+						pthread_detach(dtp_thread); // Allow thread to clean up itself
+					}
+
 					csp_buffer_free(packet);
-					continue;
+					break;
 				}
+				case 0x02: // For running a command
+					printf("\t%s - [DEBUG] Received Remote Command request (0x02). %s\n", "\x1B[33m", "\x1B[0m");
 
-				opts->server = metadata->dtp_server_address;
-				opts->payload_id = metadata->payload_id;
+					// We assume the packet data is a null-terminated string
+					char *command_script = (char *)(packet->data + 1);
 
-				strncpy(opts->file_src_name, metadata->file_src, sizeof(opts->file_src_name) - 1);
-				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+					printf("--- Executing Remote Command ---\n%s\n----------------------------------\n", command_script);
 
-				strncpy(opts->file_dst_name, metadata->file_dest, sizeof(opts->file_dst_name) - 1);
-				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+					// Execute the command
+					int ret = system(command_script);
 
-				// You will need to set the other opts fields here too!
-				opts->timeout = 10000;
-				opts->mtu = 256;
-				opts->resume = 0;
-				opts->throughput = 1024;
-
-				upload_metadata_item__free_unpacked(metadata, NULL);
-
-				/* This is very important, else the default no-op hooks will be used */
-				default_session_hooks = apm_session_hooks;
-
-				/* C. Start the DTP client worker in a new thread */
-				pthread_t dtp_thread;
-				if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
-				{
-					printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
-					free(opts); // Don't forget to free if thread creation fails
+					printf("Command finished with exit code: %d\n", ret);
+					break; 
 				}
-				else
-				{
-					pthread_detach(dtp_thread); // Allow thread to clean up itself
-				}
-
-				csp_buffer_free(packet);
-				break;
 
 			default:
-				/* For pings and other management traffic, use the service handler */
-				printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
-				csp_service_handler(packet);
+				printf("\t%s - [WARN] Received unknown command type 0x%02X on port 10. %s\n", "\x1B[31m", command_type, "\x1B[0m");
 				break;
 			}
+
+			csp_buffer_free(packet);
+			break; // Break from outer case
 		}
 
-		/* Close the connection when done */
-		csp_close(conn);
+	default:
+		/* For pings and other management traffic, use the service handler */
+		printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
+		csp_service_handler(packet);
+		break;
 	}
+}
 
-	return ret;
+/* Close the connection when done */
+csp_close(conn);
+}
+
+return ret;
 }
