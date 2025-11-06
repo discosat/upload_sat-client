@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 				}
 
 			default:
-				printf("\t%s - [WARN] Received unknown command type 0x%02X on port 10. %s\n", "\x1B[31m", command_type, "\x1B[0m");
+				printf("\t%s - [WARN] Received unknown command type 0x%02X on port 10. %s\n", "\x1B[31m", cmd, "\x1B[0m");
 				break;
 			}
 
