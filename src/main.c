@@ -393,12 +393,11 @@ int main(int argc, char *argv[])
 					continue;
 				}
 
-				uint8_t cmd = packet->data[0];
+				uint8_t cmd_run = packet->data[0];
 
-				switch (cmd)
+				switch (cmd_run)
 				{
-				case 0x01: // If we want to upload
-				{
+				case 0x01: // for running DTP upload
 					/* A. Allocate memory for the thread arguments */
 					dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
 					if (!opts)
@@ -443,11 +442,11 @@ int main(int argc, char *argv[])
 
 					csp_buffer_free(packet);
 					break;
-				}
-				case 0x02: // For running a command
+				case 0x02: // for running commands
 					printf("\t%s - [DEBUG] Received Remote Command request (0x02). %s\n", "\x1B[33m", "\x1B[0m");
 
 					// We assume the packet data is a null-terminated string
+					// (We ensured this on the CSH side)
 					char *command_script = (char *)(packet->data + 1);
 
 					printf("--- Executing Remote Command ---\n%s\n----------------------------------\n", command_script);
@@ -456,29 +455,24 @@ int main(int argc, char *argv[])
 					int ret = system(command_script);
 
 					printf("Command finished with exit code: %d\n", ret);
-					break; 
+					break; // Break from inner switch
+					break;
+				default:
+					printf("\t%s - [WARN] Received unknown command type 0x%02X on port 10. %s\n", "\x1B[31m", cmd_run, "\x1B[0m");
+					break;
 				}
 
 			default:
-				printf("\t%s - [WARN] Received unknown command type 0x%02X on port 10. %s\n", "\x1B[31m", cmd, "\x1B[0m");
+				/* For pings and other management traffic, use the service handler */
+				printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
+				csp_service_handler(packet);
 				break;
 			}
-
-			csp_buffer_free(packet);
-			break; // Break from outer case
 		}
 
-	default:
-		/* For pings and other management traffic, use the service handler */
-		printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
-		csp_service_handler(packet);
-		break;
+		/* Close the connection when done */
+		csp_close(conn);
 	}
-}
 
-/* Close the connection when done */
-csp_close(conn);
-}
-
-return ret;
+	return ret;
 }
