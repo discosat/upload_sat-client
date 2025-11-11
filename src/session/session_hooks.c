@@ -66,7 +66,7 @@ static void apm_on_start(dtp_t *session)
     /* Grow file to expected session size */
     if (session->payload_size > sizeof(dummy))
     {
-        VMEM_MMAP_VAR(dtp_data).write(&VMEM_MMAP_VAR(dtp_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
+        VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
     }
 
     printf("\t%s - [DEBUG] session_hooks:apm_on_start %s\n", "\x1B[33m", "\x1B[0m");
@@ -87,7 +87,7 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
         ((hook_ctx_t *)session->hooks.hook_ctx)->last_packet_ts = now;
     }
 
-    VMEM_MMAP_VAR(dtp_data).write(&VMEM_MMAP_VAR(dtp_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
+    VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
     printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
     return update_segments(segments, packet_seq);
 }
