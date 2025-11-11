@@ -27,6 +27,7 @@
 #include "dtp/dtp_session.h"
 #include "protobuf/uploadmetadata.pb-c.h"
 #include "session/segments_utils.h"
+#include "include/session/session_hooks.h"
 
 #define SERVERPORT 10
 
@@ -82,6 +83,8 @@ static void *dtp_client_worker(void *param)
 	dtp_thread_args_t *opts = (dtp_thread_args_t *)param;
 	dtp_t *session;
 	int *slash_res = NULL;
+
+	set_dest_addr(opts->file_dst_name);
 
 	csp_print("Starting DTP client for payload %u from server %u\n", opts->payload_id, opts->server);
 

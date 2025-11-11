@@ -1,3 +1,5 @@
+#include "../include/session/session_hooks.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <csp/csp.h>
@@ -8,8 +10,8 @@
 #include "session/segments_utils.h"
 #include "vmem/vmem_mmap.h"
 
-VMEM_DEFINE_MMAP(dtp_session_meta, "dtp_session_meta.bin", "dtp_session_meta.bin", 1024);
-VMEM_DEFINE_MMAP(dtp_data, "dtp_data.bin", "/home/burak/Documents/DISCO-2/uploaded_stuff.bin", 1024);
+VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
+VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);
@@ -17,6 +19,23 @@ static void apm_on_end(dtp_t *session);
 static void apm_on_serialize(dtp_t *session, void *ctx);
 static void apm_on_deserialize(dtp_t *session, void *ctx);
 static void apm_on_release(dtp_t *session);
+
+static char file_dest_path[256];
+
+void set_dest_addr(char * dst_addr)
+{
+    printf("\t%s - [DEBUG] session_hooks:set_dest_addr -> Setting new DTP path to: %s %s\n", "\x1B[33m", dst_addr, "\x1B[0m");
+
+    strncpy(file_dest_path, dst_addr, sizeof(file_dest_path) - 1);
+    // Ensure null termination
+    file_dest_path[sizeof(file_dest_path) - 1] = '\0';
+
+    // The vmem_t object is vmem_mmap_dtp_upload_data (from VMEM_MMAP_VAR)
+    vmem_mmap_driver_t *driver = (vmem_mmap_driver_t *)vmem_mmap_dtp_upload_data.driver;
+
+    // Update the driver's filename pointer to point to our safe, persistent buffer
+    driver->filename = strdup(file_dest_path);
+}
 
 const dtp_opt_session_hooks_cfg apm_session_hooks = {
     .on_start = apm_on_start,
