@@ -19,8 +19,8 @@ sources = files(
 dirs = include_directories(
     'src/include',
     'src/include/vmem',
-    'src/include/protobuf',
     'src/include/session',
+    'src/protobuf/include',
 )
 
 csp_dep = dependency('csp', fallback: ['csp', 'csp_dep'])
