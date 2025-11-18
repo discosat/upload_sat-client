@@ -1,1 +1,1 @@
-option('hostname', type : 'string', value : 'Upload Client', description : 'Hostname and promt')
+option('hostname', type : 'string', value : 'Upload-Client', description : 'Hostname and promt')
