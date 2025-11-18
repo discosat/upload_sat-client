@@ -174,7 +174,7 @@ static struct option long_options[] = {
 
 void print_help()
 {
-	csp_print("Usage: csp_client [options]\n");
+	csp_print("Usage: upload_sat-client [options]\n");
 	if (CSP_HAVE_LIBSOCKETCAN)
 	{
 		csp_print(" -c <can-device>  set CAN device\n");
@@ -194,7 +194,7 @@ void print_help()
 	if (1)
 	{
 		csp_print(" -a <address>     set interface address\n"
-				  " -C <address>     connect to server at address\n"
+				  " -s <address>     connect to server at address\n"
 				  " -t               enable test mode\n"
 				  " -T <duration>    enable test mode with running time in seconds\n"
 				  " -h               print help\n");
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
 	int ret = EXIT_SUCCESS;
 	int opt;
 
-	while ((opt = getopt_long(argc, argv, OPTION_c OPTION_z OPTION_R "k:a:C:f:tT:h", long_options, NULL)) != -1)
+	while ((opt = getopt_long(argc, argv, OPTION_c OPTION_z OPTION_R "k:a:s:f:tT:h", long_options, NULL)) != -1)
 	{
 		switch (opt)
 		{
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 		case 'a':
 			client_address = atoi(optarg);
 			break;
-		case 'C':
+		case 's':
 			server_address = atoi(optarg);
 			break;
 		case 't':
