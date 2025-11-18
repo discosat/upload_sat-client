@@ -97,7 +97,6 @@ static void *dtp_client_worker(void *param)
 	printf("\t\t%s * session: %p %s\n", "\x1B[33m", session, "\x1B[0m");
 
 	// Run the DTP client. This will block until the transfer is complete or fails.
-	//file_dest = opts->file_dst_name;
 	dtp_result result = dtp_client_main(opts->server, opts->throughput, opts->timeout, opts->payload_id, opts->mtu, opts->resume, &session);
 
 	if (DTP_ERR == result)
@@ -147,7 +146,6 @@ enum DeviceType
 #define __maybe_unused __attribute__((__unused__))
 
 static struct option long_options[] = {
-	{"file_src", required_argument, 0, 'f'},
 	{"kiss-device", required_argument, 0, 'k'},
 #if (CSP_HAVE_LIBSOCKETCAN)
 #define OPTION_c "c:"
@@ -197,7 +195,6 @@ void print_help()
 	{
 		csp_print(" -a <address>     set interface address\n"
 				  " -C <address>     connect to server at address\n"
-				  " -f <file src>	 source of file to be sent\n"
 				  " -t               enable test mode\n"
 				  " -T <duration>    enable test mode with running time in seconds\n"
 				  " -h               print help\n");
