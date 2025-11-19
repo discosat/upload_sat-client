@@ -36,6 +36,8 @@ void set_dest_addr(char * dst_addr)
 
     // Update the driver's filename pointer to point to our safe, persistent buffer
     driver->filename = strdup(file_dest_path);
+
+    set_log_param(UPLOAD_SUCCESS); // temp. solution
 }
 
 const dtp_opt_session_hooks_cfg apm_session_hooks = {
