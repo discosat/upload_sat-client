@@ -31,7 +31,7 @@
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
 
-#define SERVERPORT 10
+#define SERVERPORT 20
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
