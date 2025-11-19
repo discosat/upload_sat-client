@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
 			{
 			case 10:
 				param_serve(packet);
-			case SERVER_PORT:
+			case SERVERPORT:
 				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 				UploadMetadataItem *metadata;
