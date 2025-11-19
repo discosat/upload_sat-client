@@ -28,6 +28,7 @@
 #include "protobuf/uploadmetadata.pb-c.h"
 #include "session/segments_utils.h"
 #include "include/session/session_hooks.h"
+#include "client_logs.h"
 
 #define SERVERPORT 10
 
