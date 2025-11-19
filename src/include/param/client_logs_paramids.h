@@ -5,6 +5,6 @@
 
 
 // Status of uploading success/failure.
-#define STATUS_LOG 1
+#define CLIENT_STATUS_LOG 1
 
 #endif
