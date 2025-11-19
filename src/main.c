@@ -31,6 +31,7 @@
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
 
+/* Server port, the port the server listens on for incoming connections from the client. */
 #define SERVERPORT 20
 
 dtp_opt_session_hooks_cfg default_session_hooks;
@@ -125,9 +126,6 @@ static void *dtp_client_worker(void *param)
 
 	pthread_exit(NULL);
 }
-
-/* Server port, the port the server listens on for incoming connections from the client. */
-#define SERVER_PORT 10
 
 /* Commandline options */
 static uint8_t server_address = 0;
