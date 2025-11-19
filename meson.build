@@ -20,6 +20,7 @@ sources = files(
 dirs = include_directories(
     'src/include',
     'src/include/vmem',
+    'src/include/param',
     'src/include/session',
     'src/protobuf/include',
 )
