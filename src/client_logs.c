@@ -5,7 +5,7 @@
 #include "client_logs_paramids.h"
 #include "vmem_storage.h"
 
-void set_log_param(LOG_CODE log_code)
+void set_log_param(CLIENT_LOG_CODE log_code)
 {
     uint32_t get_code_val = (uint32_t)log_code;
     param_set_uint32(&get_upload_log_status, get_code_val);
