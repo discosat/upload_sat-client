@@ -17,4 +17,9 @@ typedef enum CLIENT_LOG_CODE
 */
 void set_log_param(CLIENT_LOG_CODE log_code);
 
+/**
+ * Dummy function
+ */
+void client_logs_init(void);
+
 #endif

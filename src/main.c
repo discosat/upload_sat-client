@@ -21,7 +21,9 @@
 #include <slash/optparse.h>
 #include <slash/dflopt.h>
 #include <param/param_server.h>
+#include <vmem/vmem_file.h>
 
+#include "vmem_storage.h"
 #include "vmem_dtp_server.h"
 #include "dtp/dtp.h"
 #include "dtp/dtp_log.h"
@@ -259,6 +261,8 @@ int main(int argc, char *argv[])
 	int ret = EXIT_SUCCESS;
 	int opt;
 
+	vmem_file_init(&vmem_storage);
+
 	while ((opt = getopt_long(argc, argv, OPTION_c OPTION_z OPTION_R "k:a:s:f:tT:h", long_options, NULL)) != -1)
 	{
 		switch (opt)
@@ -323,6 +327,10 @@ int main(int argc, char *argv[])
 	/* Start router */
 	router_start();
 
+	client_logs_init(); 
+
+    vmem_file_init(&vmem_storage);
+
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
 
@@ -382,6 +390,7 @@ int main(int argc, char *argv[])
 			{
 			case 10:
 				param_serve(packet);
+				break;
 			case SERVERPORT:
 				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
