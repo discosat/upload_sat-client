@@ -20,6 +20,7 @@
 #include <csp/interfaces/csp_if_zmqhub.h>
 #include <slash/optparse.h>
 #include <slash/dflopt.h>
+#include <param/param_server.h>
 
 #include "vmem_dtp_server.h"
 #include "dtp/dtp.h"
@@ -381,6 +382,8 @@ int main(int argc, char *argv[])
 
 			switch (dport)
 			{
+			case 10:
+				param_serve(packet);
 			case SERVER_PORT:
 				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
