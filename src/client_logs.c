@@ -16,5 +16,6 @@ void set_log_param(CLIENT_LOG_CODE log_code)
 
 void client_logs_init(void)
 {
+    param_set_uint32(&get_upload_log_status, 0);
     printf("client_logs:client_logs_init\n");
 }

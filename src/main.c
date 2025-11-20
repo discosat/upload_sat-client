@@ -327,6 +327,7 @@ int main(int argc, char *argv[])
 	/* Start router */
 	router_start();
 
+	void client_logs_init(void);
 	client_logs_init(); 
 
     vmem_file_init(&vmem_storage);
