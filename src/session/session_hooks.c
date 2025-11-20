@@ -23,7 +23,7 @@ static void apm_on_release(dtp_t *session);
 
 static char file_dest_path[256];
 
-void set_dest_addr(char * dst_addr)
+int set_dest_addr(char * dst_addr)
 {
     printf("\t%s - [DEBUG] session_hooks:set_dest_addr -> Setting new DTP path to: %s %s\n", "\x1B[33m", dst_addr, "\x1B[0m");
 
@@ -33,11 +33,17 @@ void set_dest_addr(char * dst_addr)
 
     // The vmem_t object is vmem_mmap_dtp_upload_data (from VMEM_MMAP_VAR)
     vmem_mmap_driver_t *driver = (vmem_mmap_driver_t *)vmem_mmap_dtp_upload_data.driver;
+    
+    if(file_dest_path == NULL)
+    {
+        set_log_param(ERR_BAD_FILE_DEST);
+        return 1;
+    }
 
     // Update the driver's filename pointer to point to our safe, persistent buffer
     driver->filename = strdup(file_dest_path);
 
-    set_log_param(UPLOAD_SUCCESS); // temp. solution
+    return 0;
 }
 
 const dtp_opt_session_hooks_cfg apm_session_hooks = {

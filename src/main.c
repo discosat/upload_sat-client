@@ -34,7 +34,7 @@
 #include "client_logs.h"
 
 /* Server port, the port the server listens on for incoming connections from the client. */
-#define SERVERPORT 20
+#define SERVERPORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -89,7 +89,14 @@ static void *dtp_client_worker(void *param)
 	dtp_t *session;
 	int *slash_res = NULL;
 
-	set_dest_addr(opts->file_dst_name);
+	int status = 0;
+
+	status = set_dest_addr(opts->file_dst_name);
+
+	if(status == 0)
+	{
+		set_log_param(UPLOAD_SUCCESS);
+	}
 
 	csp_print("Starting DTP client for payload %u from server %u\n", opts->payload_id, opts->server);
 
@@ -331,6 +338,7 @@ int main(int argc, char *argv[])
 	void client_logs_init(void);
 	client_logs_init(); 
 
+    printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
     vmem_file_init(&vmem_storage);
 
 	/* Add interface(s) */
@@ -390,7 +398,7 @@ int main(int argc, char *argv[])
 
 			switch (dport)
 			{
-			case 10:
+			case 20:
 				param_serve(packet);
 				break;
 			case SERVERPORT:
@@ -402,6 +410,7 @@ int main(int argc, char *argv[])
 				if (metadata == NULL)
 				{
 					printf("\t%s - [ERROR] Failed to unpack Protobuf metadata message! %s\n", "\x1B[31m", "\x1B[0m");
+					set_log_param(ERR_PROTOBUF_UNPACK_FAILURE);
 					csp_buffer_free(packet);
 					continue;
 				}
@@ -411,6 +420,7 @@ int main(int argc, char *argv[])
 				if (!opts)
 				{
 					printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
+					set_log_param(ERR_DTP_OPT_MEM_ALL);
 					upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
 					csp_buffer_free(packet);
 					continue;
@@ -441,6 +451,7 @@ int main(int argc, char *argv[])
 				if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
 				{
 					printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
+					set_log_param(ERR_DTP_THREAD_CREATION);
 					free(opts); // Don't forget to free if thread creation fails
 				}
 				else
