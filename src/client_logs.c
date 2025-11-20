@@ -17,5 +17,6 @@ void set_log_param(CLIENT_LOG_CODE log_code)
 void client_logs_init(void)
 {
     param_set_uint32(&get_upload_log_status, 0);
-    printf("client_logs:client_logs_init\n");
+    printf("\t%s - [INFO] client_logs:client_logs_init %s\n", "\x1B[36m", "\x1B[0m");
+    printf("\t%s - [INFO] get_upload_log_status->vaddr: %lu %s\n", "\x1B[36m", get_upload_log_status->vaddr, "\x1B[0m");
 }
