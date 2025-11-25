@@ -97,7 +97,7 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
     }
 
     VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
-    printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
+    //printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
     return update_segments(segments, packet_seq);
 }
 
