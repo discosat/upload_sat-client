@@ -129,6 +129,14 @@ static void apm_on_end(dtp_t *session)
     dbg_log("Done");
     free_segments(complements);
     printf("\t%s - [DEBUG] session_hooks:apm_on_end %s\n", "\x1B[33m", "\x1B[0m");
+
+    char *dot = strrchr(file_dest_path, '.');
+    
+    if (dot && strcmp(dot, ".task") == 0) 
+    {
+        printf("\t%s - [INFO] Task file detected. Handing over to interpreter... %s\n", "\x1B[36m", "\x1B[0m");
+        //execute_custom_task(file_dest_path);
+    }
 }
 
 static void apm_on_release(dtp_t *session)
