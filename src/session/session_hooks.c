@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <ctype.h>
 
 #include <csp/csp.h>
 #include <csp/arch/csp_time.h>
@@ -13,6 +11,9 @@
 #include "session/segments_utils.h"
 #include "vmem/vmem_mmap.h"
 #include "client_logs.h"
+
+#include <errno.h>
+#include <ctype.h>
 
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
