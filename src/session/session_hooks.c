@@ -40,6 +40,9 @@ void exec_task(const char *filepath)
         return;
     }
 
+    char line[512];
+    int line_num = 0;
+
     // Read commands line by line
     while (fgets(line, sizeof(line), fp))
     {
