@@ -12,6 +12,7 @@ project('upload_client', 'c', version: '0.1.0', subproject_dir: 'lib',
 sources = files(
     'src/main.c',
     'src/client_logs.c',
+    'src/client_logs_param.c',
     'src/vmem/vmem_storage.c',
     'src/protobuf/uploadmetadata.pb-c.c',
     'src/session/segments_utils.c',
