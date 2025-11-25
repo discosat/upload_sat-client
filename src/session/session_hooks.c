@@ -23,7 +23,70 @@ static void apm_on_release(dtp_t *session);
 
 static char file_dest_path[256];
 
-int set_dest_addr(char * dst_addr)
+/**
+ *
+ */
+void exec_task(const char *filepath)
+{
+    printf("\t%s - [INFO] Processing commands task file: %s %s\n", "\x1B[36m", filepath, "\x1B[0m");
+
+    FILE *fp = fopen(filepath, "r");
+    if (!fp)
+    {
+        printf("\t%s - [ERROR] Could not open commands task file.%s\n", "\x1B[31m", "\x1B[0m");
+        return;
+    }
+
+    // Read commands line by line
+    while (fgets(line, sizeof(line), fp))
+    {
+        line_num++;
+
+        // Strip newline at the end
+        line[strcspn(line, "\r\n")] = 0;
+
+        // Skip empty lines or comments
+        if (strlen(line) == 0 || line[0] == '#')
+            continue;
+
+        // Tokenize the line (Split by space)
+        char *cmd = strtok(line, " ");
+        if (!cmd)
+            continue;
+
+        if (strcmp(cmd, "MOVE") == 0)
+        {
+            char *src = strtok(NULL, " ");
+            char *dst = strtok(NULL, " ");
+
+            if (src && dst)
+            {
+                if (rename(src, dst) == 0)
+                {
+                    printf("\t%s - [INFO] MOVE Success: %s -> %s %s\n", "\x1B[32m", src, dst, "\x1B[0m");
+                }
+                else
+                {
+                    printf("\t%s - [ERROR] MOVE Failed: %s -> %s (Error: %s) %s\n", "\x1B[31m", src, dst, strerror(errno), "\x1B[0m");
+                }
+            }
+            else
+            {
+                printf("\t%s - [WARN] Line %d: MOVE requires two arguments. %s\n", "\x1B[33m", line_num, "\x1B[0m");
+            }
+        }
+        else
+        {
+            printf("\t%s - [WARN] Unknown command! %s\n", "\x1B[33m", "\x1B[0m");
+        }
+    }
+
+    // Cleanup
+    fclose(fp);
+    remove(filepath);
+}
+
+int set_dest_addr(char *dst_addr)
 {
     printf("\t%s - [DEBUG] session_hooks:set_dest_addr -> Setting new DTP path to: %s %s\n", "\x1B[33m", dst_addr, "\x1B[0m");
 
@@ -33,8 +96,8 @@ int set_dest_addr(char * dst_addr)
 
     // The vmem_t object is vmem_mmap_dtp_upload_data (from VMEM_MMAP_VAR)
     vmem_mmap_driver_t *driver = (vmem_mmap_driver_t *)vmem_mmap_dtp_upload_data.driver;
-    
-    if(file_dest_path == NULL)
+
+    if (file_dest_path == NULL)
     {
         set_log_param(ERR_BAD_FILE_DEST);
         return 1;
@@ -97,7 +160,7 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
     }
 
     VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
-    //printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
+    // printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
     return update_segments(segments, packet_seq);
 }
 
@@ -131,11 +194,11 @@ static void apm_on_end(dtp_t *session)
     printf("\t%s - [DEBUG] session_hooks:apm_on_end %s\n", "\x1B[33m", "\x1B[0m");
 
     char *dot = strrchr(file_dest_path, '.');
-    
-    if (dot && strcmp(dot, ".task") == 0) 
+
+    if (dot && strcmp(dot, ".task") == 0)
     {
-        printf("\t%s - [INFO] Task file detected. Handing over to interpreter... %s\n", "\x1B[36m", "\x1B[0m");
-        //execute_custom_task(file_dest_path);
+        printf("\t%s - [INFO] Task file detected. Starting task execution... %s\n", "\x1B[36m", "\x1B[0m");
+        exec_task(file_dest_path);
     }
 }
 
