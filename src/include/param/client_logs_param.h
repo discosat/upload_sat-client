@@ -2,11 +2,12 @@
 #define CLIENT_LOGS_PARAM_H
 
 #include <param/param.h>
-#include "client_logs_paramids.h"
-#include "vmem_storage.h"
 
-// Define params here...
+// Keep error code for the upload process. 
+extern param_t get_upload_log_status;
 
-PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, get_upload_log_status, PARAM_TYPE_UINT32, -1, 0, PM_READONLY, NULL, NULL, storage, VMEM_DOWNLOAD_LOG_ADDR, "Latest upload (client) log code");
+#define CLIENT_STATUS_LOG 1
+
+#define PARAM_MAX_SIZE 512
 
 #endif
