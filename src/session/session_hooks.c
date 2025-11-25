@@ -156,7 +156,7 @@ static void write_segment_to_file(uint32_t _1, uint32_t start, uint32_t end, voi
 
 static void apm_on_serialize(dtp_t *session, void *ctx)
 {
-    FILE *f = fopen("dtp_session_meta.bin", "wb");
+    FILE *f = fopen("dtp_upload_session_meta.bin", "wb");
     if (f)
     {
         // For future development, stamp the version as the first 32bits in the file
@@ -194,7 +194,7 @@ static void apm_on_serialize(dtp_t *session, void *ctx)
 
 static void apm_on_deserialize(dtp_t *session, void *ctx)
 {
-    FILE *f = fopen("dtp_session_meta.bin", "rb");
+    FILE *f = fopen("dtp_upload_session_meta.bin", "rb");
     segments_ctx_t *segments;
     uint32_t start;
     uint32_t end;
