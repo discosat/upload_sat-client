@@ -414,6 +414,9 @@ int main(int argc, char *argv[])
 					csp_buffer_free(packet);
 					continue;
 				}
+				else {
+					printf("\t%s - [DEBUG] Received metadata NOT null. %s\n", "\x1B[33m", "\x1B[0m");
+				}
 
 				/* A. Allocate memory for the thread arguments */
 				dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
