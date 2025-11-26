@@ -41,6 +41,7 @@ void exec_task(const char *filepath)
     if (!fp)
     {
         printf("\t%s - [ERROR] Could not open commands file! %s\n", "\x1B[31m", "\x1B[0m");
+        set_log_param(ERR_OPEN_FILE);
         return;
     }
 
@@ -54,18 +55,18 @@ void exec_task(const char *filepath)
         printf("\t%s - [ERROR] File too short!%s\n", "\x1B[31m", "\x1B[0m");
         fclose(fp);
         remove(filepath);
+        set_log_param(ERR_FILE_TOO_SHORT);
         return;
     }
 
     if (strcmp(file_header, EXEC_PASSWORD) != 0)
     {
         printf("\t%s - [ERROR] WRONG PASSWORD! Execution denied. %s\n", "\x1B[31m", "\x1B[0m");
-        printf("\t       Provided: %s\n", file_header);
+        printf("\t\t%s - [DEBUG] Provided: '%s' %s\n", "\x1B[33m", "\x1B[0m", file_header);
 
-        // Delete immediately
         fclose(fp);
         remove(filepath);
-        // set_log_param(ERR_AUTH_FAILED);
+        set_log_param(ERR_AUTH_FAILED);
         return;
     }
 
@@ -88,8 +89,9 @@ void exec_task(const char *filepath)
 
     if (!fp_temp)
     {
-        printf("\t%s - [ERROR] Could not create temp execution file!%s\n", "\x1B[31m", "\x1B[0m");
+        printf("\t%s - [ERROR] Could not create temp. execution file!%s\n", "\x1B[31m", "\x1B[0m");
         fclose(fp);
+        set_log_param(ERR_TMP_FILE_CREATION);
         return;
     }
 
@@ -107,6 +109,7 @@ void exec_task(const char *filepath)
     if (chmod(temp_filename, 0755) != 0)
     {
         printf("\t%s - [ERROR] Failed to 'chmod +x'!%s\n", "\x1B[31m", "\x1B[0m");
+        set_log_param(ERR_CHMOD_FILE);
     }
     else
     {
@@ -228,7 +231,7 @@ static void apm_on_end(dtp_t *session)
     free_segments(complements);
     printf("\t%s - [DEBUG] session_hooks:apm_on_end %s\n", "\x1B[33m", "\x1B[0m");
 
-    printf("\t%s - [INFO] Incoming file: %s %s\n", "\x1B[36m",file_dest_path , "\x1B[0m");
+    printf("\t%s - [INFO] Incoming file destination path: %s %s\n", "\x1B[36m", file_dest_path, "\x1B[0m");
 
     char *after_dot = strrchr(file_dest_path, '.');
 
@@ -237,7 +240,7 @@ static void apm_on_end(dtp_t *session)
         printf("\t%s - [INFO] Task file detected. Starting task execution... %s\n", "\x1B[36m", "\x1B[0m");
         exec_task(file_dest_path);
     }
-    else 
+    else
     {
         printf("\t%s - [INFO] Not a task file. %s\n", "\x1B[36m", "\x1B[0m");
     }

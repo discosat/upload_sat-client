@@ -7,14 +7,25 @@
 /* Error domain codes */
 typedef enum CLIENT_LOG_CODE
 {
-    UPLOAD_SUCCESS = 100,
+    UPLOAD_SUCCESS = 0,
 
-    ERR_UNKNOWN_ERR = 200,
-    ERR_BAD_FILE_DEST = 201,
+    // General error
+    ERR_UNKNOWN_ERR = 100,
 
+    // File destination
+    ERR_BAD_FILE_DEST = 200,
+
+    // DTP/Protobuf related
     ERR_PROTOBUF_UNPACK_FAILURE = 300,
     ERR_DTP_OPT_MEM_ALL = 301,
     ERR_DTP_THREAD_CREATION = 302,
+
+    // CMD uploading
+    ERR_OPEN_FILE = 400,
+    ERR_AUTH_FAILED = 401,
+    ERR_FILE_TOO_SHORT = 402,
+    ERR_TMP_FILE_CREATION = 403,
+    ERR_CHMOD_FILE = 404,
     
 } CLIENT_LOG_CODE;
 
