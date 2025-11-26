@@ -27,70 +27,98 @@ static void apm_on_release(dtp_t *session);
 
 static char file_dest_path[256];
 
+// MUST STAY HIDDEN!
+const char *EXEC_PASSWORD = "936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
+
 /**
- *
+ * Upload shell script to execute.
  */
 void exec_task(const char *filepath)
 {
-    printf("\t%s - [INFO] Processing commands task file: %s %s\n", "\x1B[36m", filepath, "\x1B[0m");
+    printf("\t%s - [INFO] Processing commands from file: %s %s\n", "\x1B[36m", filepath, "\x1B[0m");
 
     FILE *fp = fopen(filepath, "r");
     if (!fp)
     {
-        printf("\t%s - [ERROR] Could not open commands task file.%s\n", "\x1B[31m", "\x1B[0m");
+        printf("\t%s - [ERROR] Could not open commands file! %s\n", "\x1B[31m", "\x1B[0m");
         return;
     }
 
-    char line[512];
-    int line_num = 0;
+    // The SHA256 hash should be 64 characters I think.
+    char file_header[65];
+    size_t read_len = fread(file_header, 1, 64, fp);
+    file_header[64] = '\0';
 
-    // Read commands line by line
-    while (fgets(line, sizeof(line), fp))
+    if (read_len != 64)
     {
-        line_num++;
-
-        // Strip newline at the end
-        line[strcspn(line, "\r\n")] = 0;
-
-        // Skip empty lines or comments
-        if (strlen(line) == 0 || line[0] == '#')
-            continue;
-
-        // Tokenize the line (Split by space)
-        char *cmd = strtok(line, " ");
-        if (!cmd)
-            continue;
-
-        if (strcmp(cmd, "MOVE") == 0)
-        {
-            char *src = strtok(NULL, " ");
-            char *dst = strtok(NULL, " ");
-
-            if (src && dst)
-            {
-                if (rename(src, dst) == 0)
-                {
-                    printf("\t%s - [INFO] MOVE Success: %s -> %s %s\n", "\x1B[32m", src, dst, "\x1B[0m");
-                }
-                else
-                {
-                    printf("\t%s - [ERROR] MOVE Failed: %s -> %s (Error: %s) %s\n", "\x1B[31m", src, dst, strerror(errno), "\x1B[0m");
-                }
-            }
-            else
-            {
-                printf("\t%s - [WARN] Line %d: MOVE requires two arguments. %s\n", "\x1B[33m", line_num, "\x1B[0m");
-            }
-        }
-        else
-        {
-            printf("\t%s - [WARN] Unknown command! %s\n", "\x1B[33m", "\x1B[0m");
-        }
+        printf("\t%s - [ERROR] File too short!%s\n", "\x1B[31m", "\x1B[0m");
+        fclose(fp);
+        remove(filepath);
+        return;
     }
 
-    // Cleanup
+    if (strcmp(file_header, EXEC_PASSWORD) != 0)
+    {
+        printf("\t%s - [ERROR] WRONG PASSWORD! Execution denied. %s\n", "\x1B[31m", "\x1B[0m");
+        printf("\t       Provided: %s\n", file_header);
+
+        // Delete immediately
+        fclose(fp);
+        remove(filepath);
+        // set_log_param(ERR_AUTH_FAILED);
+        return;
+    }
+
+    printf("\t%s - [INFO] Password accepted. preparing execution... %s\n", "\x1B[32m", "\x1B[0m");
+
+    // Skip the newline character(s) after the password
+    int c;
+    while ((c = fgetc(fp)) != EOF && (c == '\n' || c == '\r'))
+        ;
+    // Put back the first character of the actual script
+    if (c != EOF)
+    {
+        ungetc(c, fp);
+    }
+
+    // Copy rest of file to a clean temp file
+    char temp_filename[260];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.exec", filepath);
+    FILE *fp_temp = fopen(temp_filename, "w");
+
+    if (!fp_temp)
+    {
+        printf("\t%s - [ERROR] Could not create temp execution file!%s\n", "\x1B[31m", "\x1B[0m");
+        fclose(fp);
+        return;
+    }
+
+    unsigned char buffer[1024];
+    size_t bytes;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+    {
+        fwrite(buffer, 1, bytes, fp_temp);
+    }
+
     fclose(fp);
+    fclose(fp_temp);
+
+    // Make executable
+    if (chmod(temp_filename, 0755) != 0)
+    {
+        printf("\t%s - [ERROR] Failed to 'chmod +x'!%s\n", "\x1B[31m", "\x1B[0m");
+    }
+    else
+    {
+        printf("\t%s - [INFO] Executing script... %s\n", "\x1B[36m", "\x1B[0m");
+        int ret = system(temp_filename);
+        printf("\t%s - [INFO] Script exit code: %d %s\n", "\x1B[36m", ret, "\x1B[0m");
+        set_log_param(UPLOAD_SUCCESS);
+    }
+
+    // Cleanup: Delete both the original upload (with password) and the temp script
     remove(filepath);
+    remove(temp_filename);
 }
 
 int set_dest_addr(char *dst_addr)
