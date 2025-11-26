@@ -228,12 +228,18 @@ static void apm_on_end(dtp_t *session)
     free_segments(complements);
     printf("\t%s - [DEBUG] session_hooks:apm_on_end %s\n", "\x1B[33m", "\x1B[0m");
 
-    char *dot = strrchr(file_dest_path, '.');
+    printf("\t%s - [INFO] Incoming file: %s %s\n", "\x1B[36m",file_dest_path , "\x1B[0m");
 
-    if (dot && strcmp(dot, ".task") == 0)
+    char *after_dot = strrchr(file_dest_path, '.');
+
+    if (after_dot && strcmp(after_dot, ".task") == 0)
     {
         printf("\t%s - [INFO] Task file detected. Starting task execution... %s\n", "\x1B[36m", "\x1B[0m");
         exec_task(file_dest_path);
+    }
+    else 
+    {
+        printf("\t%s - [INFO] Not a task file. %s\n", "\x1B[36m", "\x1B[0m");
     }
 }
 
