@@ -336,8 +336,6 @@ int main(int argc, char *argv[])
 	router_start();
 
 	printf("\t%s - [INFO] Initializing all parameters %s\n", "\x1B[36m", "\x1B[0m");
-	// Init the library
-    param_init(); 
 
     // Reg. specific parameter
     client_logs_param_init();
