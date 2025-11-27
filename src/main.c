@@ -32,6 +32,7 @@
 #include "session/segments_utils.h"
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
+#include "param/client_logs_param.h"
 
 /* Server port, the port the server listens on for incoming connections from the client. */
 #define SERVERPORT 10
@@ -335,8 +336,11 @@ int main(int argc, char *argv[])
 	router_start();
 
 	printf("\t%s - [INFO] Initializing all parameters %s\n", "\x1B[36m", "\x1B[0m");
-	void client_logs_init(void);
-	client_logs_init(); 
+	// Init the library
+    param_init(); 
+
+    // Reg. specific parameter
+    client_logs_param_init();
 
     printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
     vmem_file_init(&vmem_storage);

@@ -9,7 +9,7 @@ extern param_t get_upload_log_status;
 
 #define CLIENT_STATUS_LOG 1
 
-#define PARAM_MAX_SIZE 512
+void client_logs_param_init(void);
 
 
 #endif
