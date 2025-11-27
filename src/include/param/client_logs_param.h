@@ -3,6 +3,7 @@
 
 #include <param/param.h>
 #include <vmem/vmem_storage.h>
+#include "client_logs_paramids.h"
 
 extern param_t get_upload_log_status;
 
@@ -10,7 +11,7 @@ extern param_t get_upload_log_status;
 
 #define PARAM_MAX_SIZE 512
 
-void client_logs_init(void);
+PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, get_upload_log_status, PARAM_TYPE_UINT32, PARAM_MAX_SIZE, 0, PM_READONLY, NULL, NULL, storage, VMEM_UPLOAD_LOG_ADDR, "Latest upload log code");
 
 
 #endif
