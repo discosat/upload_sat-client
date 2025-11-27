@@ -4,6 +4,8 @@
 #include <param/param.h>
 #include <vmem/vmem_storage.h>
 
+extern param_t get_upload_log_status;
+
 #define CLIENT_STATUS_LOG 1
 
 #define PARAM_MAX_SIZE 512
