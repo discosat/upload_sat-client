@@ -35,6 +35,6 @@ int fetch_server_status(void) {
         return -1;
     }
     
-    printf("Success! Server Status: %u\n", _local_log_status_cache);
+    printf("Success!!\n");
     return 0;
 }
