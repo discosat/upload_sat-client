@@ -28,8 +28,7 @@ void set_client_log_status(uint32_t status) {
 int fetch_server_status(void) {
     printf("Pulling status from Node 170...\n");
     
-    // param_pull_single(param_ptr, offset, options, node, timeout, version)
-    int res = param_pull_single(&remote_upload_log_status, INDEX_ALL, VERBOSE, state.node, TIMEOUT, 2);
+    int res = param_pull_single(&remote_upload_log_status, INDEX_ALL, 1, VERBOSE, SERVER_ADDR, TIMEOUT, 2);
     
     if (res < 0) {
         printf("Failed to pull from server (Error: %d)\n", res);

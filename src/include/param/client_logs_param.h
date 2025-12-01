@@ -7,6 +7,8 @@
 
 extern param_t remote_upload_log_status;
 
+#define SERVER_ADDR 170
+
 // Should match STATUS_LOG from the upload client
 #define CLIENT_STATUS_LOG 1
 
