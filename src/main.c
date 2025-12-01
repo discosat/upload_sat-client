@@ -46,9 +46,35 @@ int router_start(void);
 // file to be sent
 const char *file_src = NULL;
 
+// This will monitor for changes to params on server node
+void *monitor_task(void *param)
+{
+	(void)param;
+
+	printf("\t%s - [INFO] Monitor Thread Started. Polling Server Node... %s\n", "\x1B[36m", "\x1B[0m");
+
+	while (1)
+	{
+		// Attempt to fetch the status
+		int res = fetch_server_status();
+
+		if (res == 0)
+		{
+		}
+		else
+		{
+			csp_print("Failed to contact server...\n");
+		}
+
+		// Sleep to avoid flooding the network (e.g., 2 seconds)
+		sleep(2);
+	}
+	return NULL;
+}
+
 void *router_task(void *param)
 {
-	(void)param; //suppress warning
+	(void)param; // suppress warning
 	while (1)
 	{
 		csp_route_work();
@@ -95,7 +121,7 @@ static void *dtp_client_worker(void *param)
 
 	status = set_dest_addr(opts->file_dst_name);
 
-	if(status == 0)
+	if (status == 0)
 	{
 		set_log_param(UPLOAD_SUCCESS);
 	}
@@ -339,11 +365,11 @@ int main(int argc, char *argv[])
 
 	printf("\t%s - [INFO] Initializing all parameters %s\n", "\x1B[36m", "\x1B[0m");
 
-    // Reg. specific parameter
-    client_logs_param_init();
+	// Reg. specific parameter
+	client_logs_param_init();
 
-    printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
-    vmem_file_init(&vmem_storage);
+	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
+	vmem_file_init(&vmem_storage);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
@@ -385,6 +411,11 @@ int main(int argc, char *argv[])
 	csp_bind(&sock, CSP_ANY);
 	csp_listen(&sock, 10);
 
+	pthread_t monitor_thread;
+	if (pthread_create(&monitor_thread, NULL, monitor_task, NULL) != 0)
+	{
+		csp_print("Failed to start monitor thread\n");
+	}
 	/* This loop now runs forever, as intended */
 	while (1)
 	{
@@ -418,7 +449,8 @@ int main(int argc, char *argv[])
 					csp_buffer_free(packet);
 					continue;
 				}
-				else {
+				else
+				{
 					printf("\t%s - [DEBUG] Received metadata NOT null. %s\n", "\x1B[33m", "\x1B[0m");
 				}
 
@@ -453,7 +485,7 @@ int main(int argc, char *argv[])
 				/* This is very important, else the default no-op hooks will be used */
 				default_session_hooks = apm_session_hooks;
 
-				/* C. Start the DTP client worker in a new thread */
+				/* Start the DTP client worker in a new thread */
 				pthread_t dtp_thread;
 				if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
 				{
