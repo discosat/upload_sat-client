@@ -2,6 +2,7 @@
 #include <param/param_list.h>
 
 #include "client_logs_param.h"
+#include "vmem/vmem_storage.h"
 
 static uint32_t _get_upload_log_status = 0;
 
