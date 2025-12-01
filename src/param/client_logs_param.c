@@ -16,8 +16,11 @@ int VERSION = 2;    /* Current param interface version */
 // Registration function
 void client_logs_param_init(void)
 {
-    printf("\t%s - [DEBUG] registering client status log %s\n", "\x1B[33m", "\x1B[0m");
-    param_list_add(&remote_upload_log_status);
+    printf("\t%s - [DEBUG] accessing remote client status log %s\n", "\x1B[33m", "\x1B[0m");
+    if (param_pull_single(&remote_upload_log_status, INDEX_ALL, 1, VERBOSE, SERVER_ADDR, TIMEOUT, 2) != 0)
+    {
+        printf("\t%s - [ERROR] Retrieving parameter value failed! %s\n", "\x1B[31m", "\x1B[0m");
+    }
 }
 
 // Helper to set value
@@ -36,7 +39,7 @@ int fetch_server_status(void)
 
     if (res < 0)
     {
-        printf("Failed to pull from server (Error: %d)\n", res);
+        printf("\t%s - [ERROR] Retrieving parameter value failed (Error: %d) %s\n", "\x1B[31m", res, "\x1B[0m");
         return -1;
     }
 
