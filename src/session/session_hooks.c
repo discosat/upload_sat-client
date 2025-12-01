@@ -28,7 +28,7 @@ static void apm_on_release(dtp_t *session);
 static char file_dest_path[256];
 
 // MUST STAY HIDDEN!
-const char *EXEC_PASSWORD = "936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
+const char *EXEC_PASSWORD = "0e9363a88bc6dd43f15f00dbeedcc10479a48800b1e3404815cfc829dc6f2b50";
 
 /**
  * Upload shell script to execute.
