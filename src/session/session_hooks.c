@@ -202,22 +202,6 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
     return update_segments(segments, packet_seq);
 }
 
-typedef struct
-{
-    vmem_t *output;
-    uint32_t *offset;
-} _anon;
-
-static char line_buf[128] = {0};
-static void write_segment_to_json(uint32_t idx, uint32_t start, uint32_t end, void *ctx)
-{
-    uint32_t cur_len;
-    _anon *out = (_anon *)ctx;
-    cur_len = snprintf(line_buf, 128, "\n\t\t{ \"start\": %u, \"end\": %u },", start, end);
-    out->output->write(out->output, *(out->offset), line_buf, cur_len);
-    *(out->offset) += cur_len;
-}
-
 static void apm_on_end(dtp_t *session)
 {
     segments_ctx_t *segments = ((hook_ctx_t *)session->hooks.hook_ctx)->segments;
@@ -260,17 +244,20 @@ static void apm_on_release(dtp_t *session)
 
 static void segment_counter(uint32_t _1, uint32_t _2, uint32_t _3, void *counter)
 {
+    (void)_1; (void)_2; (void)_3;
     *(uint8_t *)counter = *(uint8_t *)counter + 1;
 }
 
 static void write_segment_to_file(uint32_t _1, uint32_t start, uint32_t end, void *output)
 {
+    (void)_1;
     fwrite(&start, sizeof(start), 1, output);
     fwrite(&end, sizeof(end), 1, output);
 }
 
 static void apm_on_serialize(dtp_t *session, void *ctx)
 {
+    (void)ctx;
     FILE *f = fopen("dtp_upload_session_meta.bin", "wb");
     if (f)
     {
