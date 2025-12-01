@@ -17,7 +17,7 @@ int VERSION = 2;    /* Current param interface version */
 void client_logs_param_init(void)
 {
     printf("\t%s - [DEBUG] accessing remote client status log %s\n", "\x1B[33m", "\x1B[0m");
-    if (param_pull_single(&remote_upload_log_status, INDEX_ALL, 1, VERBOSE, SERVER_ADDR, TIMEOUT, 2) != 0)
+    if (param_pull_single(&remote_upload_log_status, INDEX_ALL, 1, VERBOSE, SERVER_ADDR, TIMEOUT, 2) < 0)
     {
         printf("\t%s - [ERROR] Retrieving parameter value failed! %s\n", "\x1B[31m", "\x1B[0m");
     }
