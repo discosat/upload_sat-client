@@ -30,8 +30,6 @@ int VERBOSE = 0; /* Do not print additional debug output */
 int TIMEOUT = 1000; /* Timeout for remote access [ms] */
 int VERSION = 2; /* Current param interface version */
 
-PARAM_DEFINE_REMOTE(CLIENT_STATUS_LOG, remote_upload_log_status, 170, PARAM_TYPE_UINT32, -1, 0, PM_READONLY, &_get_upload_log_status, "Remote upload log code");
-
 // Registration function
 void client_logs_param_init(void)
 {
