@@ -6,7 +6,7 @@
 
 static uint32_t _get_upload_log_status = 0;
 
-PARAM_DEFINE_REMOTE(1, remote_upload_log_status, 170, PARAM_TYPE_UINT32, -1, 0, PM_READONLY, &_get_upload_log_status, "Remote status from Node 170");
+PARAM_DEFINE_REMOTE(1, remote_upload_log_status, 170, PARAM_TYPE_UINT32, -1, 0, PM_TELEM, &_get_upload_log_status, "Remote status from Node 170");
 
 int INDEX_ALL = -1; /* Pull/push all indices */
 int VERBOSE = 0;    /* Do not print additional debug output */
