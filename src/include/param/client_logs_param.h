@@ -5,8 +5,6 @@
 #include <vmem/vmem_storage.h>
 #include "client_logs_paramids.h"
 
-extern param_t remote_upload_log_status;
-
 #define SERVER_ADDR 170
 
 // Should match STATUS_LOG from the upload client

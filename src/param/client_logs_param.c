@@ -6,6 +6,25 @@
 
 static uint32_t _get_upload_log_status = 0;
 
+// timestamp storage (required for param structure)
+static csp_timestamp_t _remote_log_timestamp = {0};
+
+// manual definition for the upload log param
+param_t remote_upload_log_status = {
+    .node = 170,                   // Server Node ID
+    .id = CLIENT_STATUS_LOG,       // Param ID on Server
+    .type = PARAM_TYPE_UINT32,
+    .array_size = 1,
+    .array_step = 0,
+    .name = "remote_upload_log_status",
+    .mask = PM_READONLY | PM_REMOTE, // Flags: Readonly + Remote
+    .addr = &_get_upload_log_status, // Where to store the pulled value
+    .vaddr = 0,
+    .vmem = NULL,
+    .timestamp = &_remote_log_timestamp, // Link to timestamp
+    .docstr = "Remote upload log code"
+};
+
 int INDEX_ALL = -1; /* Pull/push all indices */
 int VERBOSE = 0; /* Do not print additional debug output */
 int TIMEOUT = 1000; /* Timeout for remote access [ms] */
