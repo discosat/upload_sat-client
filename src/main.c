@@ -48,6 +48,7 @@ const char *file_src = NULL;
 
 void *router_task(void *param)
 {
+	(void)param; //suppress warning
 	while (1)
 	{
 		csp_route_work();
@@ -72,8 +73,8 @@ int router_start(void)
 typedef struct
 {
 	uint32_t server_addr;
-	char *file_src_name[256];
-	char *file_dst_name[256];
+	char file_src_name[256];
+	char file_dst_name[256];
 
 	int color;
 	int resume;
@@ -118,6 +119,7 @@ static void *dtp_client_worker(void *param)
 		{
 		case DTP_EINVAL:
 			*slash_res = SLASH_EINVAL;
+			break;
 		default:
 			printf("%s\n", dtp_strerror(dtp_errno(NULL)));
 			*slash_res = SLASH_SUCCESS;
