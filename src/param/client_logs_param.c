@@ -6,10 +6,7 @@
 
 static uint32_t _get_upload_log_status = 0;
 
-// timestamp storage (required for param structure)
-static csp_timestamp_t _remote_log_timestamp = {0};
-
-PARAM_DEFINE_REMOTE(1, remote_upload_log_status, 170, PARAM_TYPE_UINT32, -1, 0, PM_READONLY, &_local_log_status_cache, "Remote status from Node 170");
+PARAM_DEFINE_REMOTE(1, remote_upload_log_status, 170, PARAM_TYPE_UINT32, -1, 0, PM_READONLY, &_get_upload_log_status, "Remote status from Node 170");
 
 int INDEX_ALL = -1; /* Pull/push all indices */
 int VERBOSE = 0;    /* Do not print additional debug output */
