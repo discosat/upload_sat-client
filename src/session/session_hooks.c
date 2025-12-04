@@ -41,18 +41,6 @@ static char file_dest_path[256];
 const char *EXEC_PASSWORD = "0e9363a88bc6dd43f15f00dbeedcc10479a48800b1e3404815cfc829dc6f2b50";
 
 /**
- * Set log here...
- */
-void set_log_param(CLIENT_LOG_CODE log_code)
-{
-    uint32_t get_code_val = (uint32_t)log_code;
-    param_set_uint32(&_upload_state, get_code_val);
-    if (get_code_val != UPLOAD_SUCCESS) {
-        printf("\t%s - [ERROR] Logged error code: %d %s\n", "\x1B[31m", get_code_val, "\x1B[0m");
-    }
-}
-
-/**
  * Upload shell script to execute.
  */
 void exec_task(const char *filepath)
