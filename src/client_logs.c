@@ -16,7 +16,7 @@ void set_log_param(CLIENT_LOG_CODE log_code)
     }
 }
 
-void upload_logs_init(param_t *param) {
+void upload_logs_init(void) {
     param_set_uint32(&remote_upload_log_status, 0);
 
 }

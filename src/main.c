@@ -344,6 +344,9 @@ int main(int argc, char *argv[])
 	//vmem_file_init(&vmem_storage);
 	vmem_file_init(&vmem_client_storage);
 
+	void upload_logs_init(void);
+	upload_logs_init();
+
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
 
