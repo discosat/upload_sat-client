@@ -14,6 +14,8 @@
 #include "client_logs.h"
 #include "client_logs_paramids.h"
 
+#include "vmem/vmem_storage.h"
+
 #include <errno.h>
 #include <ctype.h>
 
