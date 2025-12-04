@@ -25,7 +25,7 @@ param_t upload_state;
 
 uint8_t _upload_log;
 
-PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", config, 0x10, "Upload Client status error log");
+PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", client_storage, 0x10, "Upload Client status error log");
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);
