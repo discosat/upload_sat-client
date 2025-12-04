@@ -23,7 +23,7 @@
 #include <param/param_server.h>
 #include <vmem/vmem_file.h>
 
-#include "vmem_storage.h"
+//#include "vmem_storage.h"
 #include "vmem_dtp_server.h"
 #include "dtp/dtp.h"
 #include "dtp/dtp_log.h"
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 	//client_logs_param_init();
 
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
-	vmem_file_init(&vmem_storage);
+	//vmem_file_init(&vmem_storage);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
