@@ -35,7 +35,7 @@
 #include "param/client_logs_param.h"
 
 /* Server port, the port the server listens on for incoming connections from the client. */
-#define SERVERPORT 10
+#define CLIENTPORT 20
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -45,32 +45,6 @@ int router_start(void);
 
 // file to be sent
 const char *file_src = NULL;
-
-// This will monitor for changes to params on server node
-void *monitor_task(void *param)
-{
-	(void)param;
-
-	printf("\t%s - [INFO] Monitor Thread Started. Polling Server Node... %s\n", "\x1B[36m", "\x1B[0m");
-
-	while (1)
-	{
-		// Attempt to fetch the status
-		int res = fetch_server_status();
-
-		if (res == 0)
-		{
-		}
-		else
-		{
-			csp_print("Failed to contact server...\n");
-		}
-
-		// Sleep to avoid flooding the network (e.g., 2 seconds)
-		sleep(2);
-	}
-	return NULL;
-}
 
 void *router_task(void *param)
 {
@@ -366,7 +340,7 @@ int main(int argc, char *argv[])
 	printf("\t%s - [INFO] Initializing all parameters %s\n", "\x1B[36m", "\x1B[0m");
 
 	// Reg. specific parameter
-	client_logs_param_init();
+	//client_logs_param_init();
 
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
 	vmem_file_init(&vmem_storage);
@@ -404,6 +378,8 @@ int main(int argc, char *argv[])
 		csp_rtable_print();
 	}
 
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
+
 	/* Start client work */
 	csp_print("Client started\n");
 
@@ -411,11 +387,6 @@ int main(int argc, char *argv[])
 	csp_bind(&sock, CSP_ANY);
 	csp_listen(&sock, 10);
 
-	pthread_t monitor_thread;
-	if (pthread_create(&monitor_thread, NULL, monitor_task, NULL) != 0)
-	{
-		csp_print("Failed to start monitor thread\n");
-	}
 	/* This loop now runs forever, as intended */
 	while (1)
 	{
@@ -433,10 +404,7 @@ int main(int argc, char *argv[])
 
 			switch (dport)
 			{
-			case 20:
-				param_serve(packet);
-				break;
-			case SERVERPORT:
+			case CLIENTPORT:
 				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 				UploadMetadataItem *metadata;

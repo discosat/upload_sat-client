@@ -11,12 +11,21 @@
 #include "session/segments_utils.h"
 #include "vmem/vmem_mmap.h"
 #include "client_logs.h"
+#include "vmem_storage.h"
 
 #include <errno.h>
 #include <ctype.h>
 
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
+
+// PARAM declaration
+param_t upload_state;
+
+// Callback func for PARAM declaration
+void log_callback();
+
+PARAM_DEFINE_STATIC_VMEM(1, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, log_callback, "", storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);
@@ -29,6 +38,18 @@ static char file_dest_path[256];
 
 // MUST STAY HIDDEN!
 const char *EXEC_PASSWORD = "0e9363a88bc6dd43f15f00dbeedcc10479a48800b1e3404815cfc829dc6f2b50";
+
+/**
+ * Set log here...
+ */
+void set_log_param(CLIENT_LOG_CODE log_code)
+{
+    uint32_t get_code_val = (uint32_t)log_code;
+    param_set_uint32(&remote_upload_log_status, get_code_val);
+    if (get_code_val != UPLOAD_SUCCESS) {
+        printf("\t%s - [ERROR] Logged error code: %d %s\n", "\x1B[31m", get_code_val, "\x1B[0m");
+    }
+}
 
 /**
  * Upload shell script to execute.
