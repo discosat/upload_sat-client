@@ -12,7 +12,6 @@
 #include "vmem/vmem_mmap.h"
 #include "client_logs.h"
 #include "client_logs_paramids.h"
-#include "vmem_storage.h"
 
 #include <errno.h>
 #include <ctype.h>

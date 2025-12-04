@@ -271,8 +271,6 @@ int main(int argc, char *argv[])
 	int ret = EXIT_SUCCESS;
 	int opt;
 
-	vmem_file_init(&vmem_storage);
-
 	while ((opt = getopt_long(argc, argv, OPTION_c OPTION_z OPTION_R "k:a:s:f:tT:h", long_options, NULL)) != -1)
 	{
 		switch (opt)
