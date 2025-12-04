@@ -35,7 +35,7 @@
 #include "client_logs.h"
 
 /* Server port, the port the server listens on for incoming connections from the client. */
-#define CLIENTPORT 20
+#define CLIENTPORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
