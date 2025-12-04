@@ -38,6 +38,6 @@ void set_log_param(CLIENT_LOG_CODE log_code);
 /**
  * Dummy function for init
  */
-void upload_logs_init(param_t *param) 
+void upload_logs_init(param_t *param);
 
 #endif
