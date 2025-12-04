@@ -5,6 +5,9 @@
 #include "client_logs_paramids.h"
 #include "vmem_storage.h"
 
+// manual definition for the upload log param
+param_t remote_upload_log_status;
+
 void set_log_param(CLIENT_LOG_CODE log_code)
 {
     uint32_t get_code_val = (uint32_t)log_code;
