@@ -19,10 +19,11 @@
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
 
-// PARAM declaration
+// PARAM declaration: upload (error log) state
 param_t upload_state;
+param_t _upload_state;
 
-// Callback func for PARAM declaration
+// Callback func for PARAM declarations
 void log_callback();
 
 PARAM_DEFINE_STATIC_VMEM(1, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, log_callback, "", storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
@@ -45,7 +46,7 @@ const char *EXEC_PASSWORD = "0e9363a88bc6dd43f15f00dbeedcc10479a48800b1e3404815c
 void set_log_param(CLIENT_LOG_CODE log_code)
 {
     uint32_t get_code_val = (uint32_t)log_code;
-    param_set_uint32(&remote_upload_log_status, get_code_val);
+    param_set_uint32(&_upload_state, get_code_val);
     if (get_code_val != UPLOAD_SUCCESS) {
         printf("\t%s - [ERROR] Logged error code: %d %s\n", "\x1B[31m", get_code_val, "\x1B[0m");
     }
