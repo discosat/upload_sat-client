@@ -20,9 +20,6 @@
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
 
-extern vmem_t vmem_config;
-VMEM_DEFINE_FILE(config, "config", "upload_client_config.vmem", 1000);
-
 // PARAM declaration: upload (error log) state
 param_t upload_state;
 

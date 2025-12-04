@@ -36,6 +36,9 @@
 /* Server port, the port the server listens on for incoming connections from the client. */
 #define CLIENTPORT 20
 
+extern vmem_t vmem_config;
+VMEM_DEFINE_FILE(config, "config", "upload_client_config.vmem", 1000);
+
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
 
@@ -341,6 +344,7 @@ int main(int argc, char *argv[])
 
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
 	//vmem_file_init(&vmem_storage);
+	vmem_file_init(&vmem_config);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
