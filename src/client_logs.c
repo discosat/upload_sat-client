@@ -4,8 +4,6 @@
 #include "client_logs_param.h"
 #include "client_logs_paramids.h"
 
-// manual definition for the upload log param
-param_t remote_upload_log_status;
 
 void set_log_param(CLIENT_LOG_CODE log_code)
 {
@@ -17,6 +15,8 @@ void set_log_param(CLIENT_LOG_CODE log_code)
 }
 
 void upload_logs_init(void) {
+    printf("\t%s - [INFO] Initialising log... %s\n", "\x1B[36m", "\x1B[0m");
+
     param_set_uint32(&remote_upload_log_status, 0);
 
 }
