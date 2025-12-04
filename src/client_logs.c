@@ -3,7 +3,6 @@
 #include "client_logs.h"
 #include "client_logs_param.h"
 #include "client_logs_paramids.h"
-#include "vmem_storage.h"
 
 // manual definition for the upload log param
 param_t remote_upload_log_status;

@@ -11,6 +11,7 @@
 #include "session/segments_utils.h"
 #include "vmem/vmem_mmap.h"
 #include "client_logs.h"
+#include "client_logs_paramids.h"
 #include "vmem_storage.h"
 
 #include <errno.h>
@@ -24,7 +25,7 @@ param_t upload_state;
 
 uint8_t _upload_log;
 
-PARAM_DEFINE_STATIC_RAM(1, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", &_upload_log, "Upload Client status error log");
+PARAM_DEFINE_STATIC_RAM(CLIENT_STATUS_LOG, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", &_upload_log, "Upload Client status error log");
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);

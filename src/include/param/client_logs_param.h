@@ -1,15 +1,5 @@
 #ifndef CLIENT_LOGS_PARAM_H
 #define CLIENT_LOGS_PARAM_H
 
-#include <param/param.h>
-#include <vmem/vmem_storage.h>
-#include "client_logs_paramids.h"
-
-#define SERVER_ADDR 170
-
-// Should match STATUS_LOG from the upload client
-#define CLIENT_STATUS_LOG 1
-
-void set_client_log_status(uint32_t status);
 
 #endif
