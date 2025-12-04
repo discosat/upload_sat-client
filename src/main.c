@@ -25,6 +25,7 @@
 
 //#include "vmem_storage.h"
 #include "vmem_dtp_server.h"
+#include "vmem/vmem_storage.h"
 #include "dtp/dtp.h"
 #include "dtp/dtp_log.h"
 #include "dtp/dtp_session.h"
