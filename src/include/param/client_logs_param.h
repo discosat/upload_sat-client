@@ -13,8 +13,6 @@ extern param_t remote_upload_log_status;
 // Should match STATUS_LOG from the upload client
 #define CLIENT_STATUS_LOG 1
 
-void client_logs_param_init(void);
 void set_client_log_status(uint32_t status);
-int fetch_server_status(void);
 
 #endif
