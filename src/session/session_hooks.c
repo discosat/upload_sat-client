@@ -23,7 +23,7 @@
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
 
-PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, upload_logs_init, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
+PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);

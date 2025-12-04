@@ -338,7 +338,8 @@ int main(int argc, char *argv[])
 	printf("\t%s - [INFO] Initializing all parameters %s\n", "\x1B[36m", "\x1B[0m");
 
 	// Reg. specific parameter
-	//client_logs_param_init();
+	void upload_logs_init(void);
+	upload_logs_init();
 
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
 	//vmem_file_init(&vmem_storage);
