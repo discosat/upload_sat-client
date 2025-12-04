@@ -36,8 +36,8 @@ typedef enum CLIENT_LOG_CODE
 void set_log_param(CLIENT_LOG_CODE log_code);
 
 /**
- * Dummy function
+ * Dummy function for init
  */
-void client_logs_init(void);
+void upload_logs_init(param_t *param) 
 
 #endif

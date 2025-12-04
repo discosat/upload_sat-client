@@ -15,3 +15,8 @@ void set_log_param(CLIENT_LOG_CODE log_code)
         printf("\t%s - [ERROR] Logged error code: %d %s\n", "\x1B[31m", get_code_val, "\x1B[0m");
     }
 }
+
+void upload_logs_init(param_t *param) {
+    param_set_uint32(&remote_upload_log_status, 0);
+
+}
