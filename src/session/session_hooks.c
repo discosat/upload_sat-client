@@ -21,12 +21,10 @@ VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024
 
 // PARAM declaration: upload (error log) state
 param_t upload_state;
-param_t _upload_state;
 
-// Callback func for PARAM declarations
-//void log_callback();
+uint8_t _upload_log;
 
-PARAM_DEFINE_STATIC_VMEM(1, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
+PARAM_DEFINE_STATIC_RAM(1, upload_state, PARAM_TYPE_INT16, -1, 0, PM_CONF, NULL, "", &_upload_log, "Upload Client status error log");
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);
