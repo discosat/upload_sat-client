@@ -1,5 +1,5 @@
-#ifndef VMEM_STORAGE_H
-#define VMEM_STORAGE_H
+#ifndef CLIENT_STORAGE_H
+#define CLIENT_STORAGE_H
 
 #include <vmem/vmem.h>
 extern vmem_t vmem_storage;
