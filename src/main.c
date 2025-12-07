@@ -20,7 +20,7 @@
 #include <csp/interfaces/csp_if_zmqhub.h>
 #include <slash/optparse.h>
 #include <slash/dflopt.h>
-#include <param/param_server.h>
+#include <param/param_client.h>
 #include <vmem/vmem_file.h>
 
 // #include "vmem_storage.h"
