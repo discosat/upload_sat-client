@@ -17,7 +17,7 @@
 
 #include "vmem/vmem_storage.h"
 
-#include <errno.h>
+
 #include <ctype.h>
 
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
