@@ -20,7 +20,7 @@
 #include <csp/interfaces/csp_if_zmqhub.h>
 #include <slash/optparse.h>
 #include <slash/dflopt.h>
-#include <param/param_client.h>
+
 #include <vmem/vmem_file.h>
 
 // #include "vmem_storage.h"
@@ -33,6 +33,8 @@
 #include "session/segments_utils.h"
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
+
+#include <param/param_client.h>
 
 // Status of uploading success/failure.
 #define CLIENT_STATUS_LOG 1
