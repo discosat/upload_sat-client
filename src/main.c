@@ -23,7 +23,7 @@
 #include <param/param_server.h>
 #include <vmem/vmem_file.h>
 
-//#include "vmem_storage.h"
+// #include "vmem_storage.h"
 #include "vmem_dtp_server.h"
 #include "vmem/vmem_storage.h"
 #include "dtp/dtp.h"
@@ -33,6 +33,8 @@
 #include "session/segments_utils.h"
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
+
+PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
 /* Server port, the port the server listens on for incoming connections from the client. */
 #define CLIENTPORT 10
@@ -332,6 +334,9 @@ int main(int argc, char *argv[])
 	csp_conf.hostname = HOSTNAME;
 	csp_init();
 
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
+	csp_bind_callback(csp_service_handler, CSP_ANY);
+
 	/* Start router */
 	router_start();
 
@@ -342,9 +347,8 @@ int main(int argc, char *argv[])
 	upload_logs_init();
 
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
-	//vmem_file_init(&vmem_storage);
+	// vmem_file_init(&vmem_storage);
 	vmem_file_init(&vmem_client_storage);
-
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
@@ -378,8 +382,6 @@ int main(int argc, char *argv[])
 		csp_print("Route table\r\n");
 		csp_rtable_print();
 	}
-
-	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
 
 	/* Start client work */
 	csp_print("Client started\n");
