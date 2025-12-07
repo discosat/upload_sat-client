@@ -34,7 +34,7 @@
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
 
-#include <param/param_client.h>
+#include <param/param_server.h>
 
 // Status of uploading success/failure.
 #define CLIENT_STATUS_LOG 1
@@ -52,6 +52,14 @@ int router_start(void);
 
 // file to be sent
 const char *file_src = NULL;
+
+// Vmem server stuff.
+static void *vmem_server_task(void *param)
+{
+    printf("main:vmem_server_task: received param address: %p\n", &param);
+    vmem_server_loop(param);
+    return NULL;
+}
 
 void *router_task(void *param)
 {
@@ -339,6 +347,7 @@ int main(int argc, char *argv[])
 	csp_conf.hostname = HOSTNAME;
 	csp_init();
 
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
 	csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
@@ -353,6 +362,9 @@ int main(int argc, char *argv[])
 	printf("\t%s - [INFO] Initializing VMEM subsystem %s\n", "\x1B[36m", "\x1B[0m");
 	// vmem_file_init(&vmem_storage);
 	vmem_file_init(&vmem_client_storage);
+
+	static pthread_t vmem_server_handle;
+    pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
