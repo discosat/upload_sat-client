@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
 	vmem_file_init(&vmem_client_storage);
 
 	static pthread_t vmem_server_handle;
-    pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
+    //pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
