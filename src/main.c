@@ -34,6 +34,9 @@
 #include "include/session/session_hooks.h"
 #include "client_logs.h"
 
+// Status of uploading success/failure.
+#define CLIENT_STATUS_LOG 1
+
 PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
 /* Server port, the port the server listens on for incoming connections from the client. */

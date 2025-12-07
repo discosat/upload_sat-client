@@ -3,7 +3,6 @@
 
 // Define parameters here...
 
-// Status of uploading success/failure.
-#define CLIENT_STATUS_LOG 1
+
 
 #endif
