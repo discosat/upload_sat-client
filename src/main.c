@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
 	vmem_file_init(&vmem_client_storage);
 
 	static pthread_t vmem_server_handle;
-    //pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
+    pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	csp_bind(&sock, CSP_ANY);
+	csp_bind(&sock, CLIENTPORT);
 	csp_listen(&sock, 10);
 
 	/* This loop now runs forever, as intended */
