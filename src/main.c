@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	csp_bind_callback(param_serve, 12);
-	//csp_bind_callback(csp_service_handler, CSP_ANY);
+	csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
