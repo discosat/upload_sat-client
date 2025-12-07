@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	csp_bind(&sock, CLIENTPORT);
+	csp_bind(&sock, CSP_ANY);
 	csp_listen(&sock, 10);
 
 	/* This loop now runs forever, as intended */
