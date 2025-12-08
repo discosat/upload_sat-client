@@ -42,7 +42,7 @@
 PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
 /* Server port, the port the server listens on for incoming connections from the client. */
-#define CLIENTPORT 10
+#define UPLOAD_PORT 18
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -348,9 +348,9 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	// Should enable list downloading
-	csp_bind_callback(param_serve, 12);
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
 
-	// csp_bind_callback(csp_service_handler, CSP_ANY);
+	csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	csp_bind(&sock, CLIENTPORT);
+	csp_bind(&sock, UPLOAD_PORT);
 	csp_listen(&sock, 10);
 
 	/* This loop now runs forever, as intended */
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
 
 			switch (dport)
 			{
-			case CLIENTPORT:
+			case UPLOAD_PORT:
 				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 				UploadMetadataItem *metadata;
