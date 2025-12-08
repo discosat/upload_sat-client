@@ -41,10 +41,8 @@
 
 PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
-#define UPLOAD_PORT 28
-
 /* Server port, the port the server listens on for incoming connections from the client. */
-#define PARAM_PORT 10
+#define CLIENTPORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -58,9 +56,9 @@ const char *file_src = NULL;
 // Vmem server stuff.
 static void *vmem_server_task(void *param)
 {
-	printf("main:vmem_server_task: received param address: %p\n", &param);
-	vmem_server_loop(param);
-	return NULL;
+    printf("main:vmem_server_task: received param address: %p\n", &param);
+    vmem_server_loop(param);
+    return NULL;
 }
 
 void *router_task(void *param)
@@ -349,9 +347,8 @@ int main(int argc, char *argv[])
 	csp_conf.hostname = HOSTNAME;
 	csp_init();
 
-	// Should enable list downloading
 	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
-	csp_bind_callback(csp_service_handler, CSP_ANY);
+	//csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
@@ -367,7 +364,7 @@ int main(int argc, char *argv[])
 	vmem_file_init(&vmem_client_storage);
 
 	static pthread_t vmem_server_handle;
-	pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
+    pthread_create(&vmem_server_handle, NULL, &vmem_server_task, NULL);
 
 	/* Add interface(s) */
 	default_iface = add_interface(device_type, device_name);
@@ -406,15 +403,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	int get_csp_bind_status = csp_bind(&sock, CSP_ANY);
-	if (get_csp_bind_status != 0)
-	{
-		printf("\t%s - [ERROR] Unable to bind port %d to socket! %s\n", "\x1B[31m", UPLOAD_PORT, "\x1B[0m");
-	}
-	else
-	{
-		printf("\t%s - [INFO] Binding port %d to socket succes. %s\n", "\x1B[36m", UPLOAD_PORT, "\x1B[0m");
-	}
+	csp_bind(&sock, CSP_ANY);
 	csp_listen(&sock, 10);
 
 	/* This loop now runs forever, as intended */
@@ -426,21 +415,16 @@ int main(int argc, char *argv[])
 			/* Timed out, continue listening */
 			continue;
 		}
-		else
-		{
-			printf("\t%s - [DEBUG] New connection detected. %s\n", "\x1B[33m", "\x1B[0m");
-		}
 
 		csp_packet_t *packet;
 		while ((packet = csp_read(conn, 100)) != NULL)
 		{
 			int dport = csp_conn_dport(conn);
-			printf("\t%s - [DEBUG] Connection port: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 			switch (dport)
 			{
-			case UPLOAD_PORT:
-				printf("\t%s - [DEBUG] Received DTP trigger request on UPLOAD_PORT: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+			case CLIENTPORT:
+				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 				UploadMetadataItem *metadata;
 				metadata = upload_metadata_item__unpack(NULL, packet->length, packet->data);
@@ -503,12 +487,6 @@ int main(int argc, char *argv[])
 
 				csp_buffer_free(packet);
 				break;
-			
-			case PARAM_PORT: 
-                printf("\t%s - [DEBUG] Handling PARAM Request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
-				// Manually call the param server
-                param_serve(packet);
-                break;
 
 			default:
 				/* For pings and other management traffic, use the service handler */
