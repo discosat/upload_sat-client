@@ -41,8 +41,10 @@
 
 PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE_DATA, 188, 0, PM_CONF, NULL, NULL, client_storage, VMEM_UPLOAD_LOG_ADDR, "Upload Client status error log");
 
-/* Server port, the port the server listens on for incoming connections from the client. */
 #define UPLOAD_PORT 18
+
+/* Server port, the port the server listens on for incoming connections from the client. */
+#define PARAM_PORT 10
 
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
@@ -348,9 +350,8 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	// Should enable list downloading
-	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
-
-	csp_bind_callback(csp_service_handler, CSP_ANY);
+	//csp_bind_callback(param_serve, PARAM_PORT_SERVER);
+	//csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
@@ -405,7 +406,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	int get_csp_bind_status = csp_bind(&sock, UPLOAD_PORT);
+	int get_csp_bind_status = csp_bind(&sock, CSP_ANY);
 	if (get_csp_bind_status != 0)
 	{
 		printf("\t%s - [ERROR] Unable to bind port %d to socket! %s\n", "\x1B[31m", UPLOAD_PORT, "\x1B[0m");
@@ -434,12 +435,12 @@ int main(int argc, char *argv[])
 		while ((packet = csp_read(conn, 100)) != NULL)
 		{
 			int dport = csp_conn_dport(conn);
-			printf("\t%s - [DEBUG] COnnection port: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+			printf("\t%s - [DEBUG] Connection port: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 			switch (dport)
 			{
 			case UPLOAD_PORT:
-				printf("\t%s - [DEBUG] Received DTP trigger request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+				printf("\t%s - [DEBUG] Received DTP trigger request on UPLOAD_PORT: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
 				UploadMetadataItem *metadata;
 				metadata = upload_metadata_item__unpack(NULL, packet->length, packet->data);
@@ -502,6 +503,12 @@ int main(int argc, char *argv[])
 
 				csp_buffer_free(packet);
 				break;
+			
+			case PARAM_PORT: 
+                printf("\t%s - [DEBUG] Handling PARAM Request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+				// Manually call the param server
+                param_serve(packet);
+                break;
 
 			default:
 				/* For pings and other management traffic, use the service handler */
