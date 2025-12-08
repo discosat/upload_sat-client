@@ -128,8 +128,8 @@ static void *dtp_client_worker(void *param)
 #define SERVER_PORT 10
 
 /* Commandline options */
-static uint8_t server_address = 0;
-static uint8_t client_address = 0;
+static uint16_t server_address = 0;
+static uint16_t client_address = 0;
 
 /* Test mode, check that server & client can exchange packets */
 static bool test_mode = false;
