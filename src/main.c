@@ -350,8 +350,8 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	// Should enable list downloading
-	//csp_bind_callback(param_serve, PARAM_PORT_SERVER);
-	//csp_bind_callback(csp_service_handler, CSP_ANY);
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
+	csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
