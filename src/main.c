@@ -405,7 +405,15 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	csp_bind(&sock, UPLOAD_PORT);
+	int get_csp_bind_status = csp_bind(&sock, UPLOAD_PORT);
+	if (get_csp_bind_status != 0)
+	{
+		printf("\t%s - [ERROR] Unable to bind port %d to socket! %s\n", "\x1B[31m", UPLOAD_PORT, "\x1B[0m");
+	}
+	else
+	{
+		printf("\t%s - [INFO] Binding port %d to socket succes. %s\n", "\x1B[36m", UPLOAD_PORT, "\x1B[0m");
+	}
 	csp_listen(&sock, 10);
 
 	/* This loop now runs forever, as intended */
