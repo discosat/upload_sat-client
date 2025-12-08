@@ -43,9 +43,6 @@ PARAM_DEFINE_STATIC_VMEM(CLIENT_STATUS_LOG, remote_upload_log_status, PARAM_TYPE
 
 #define UPLOAD_PORT 18
 
-/* Server port, the port the server listens on for incoming connections from the client. */
-#define PARAM_PORT 10
-
 dtp_opt_session_hooks_cfg default_session_hooks;
 extern dtp_opt_session_hooks_cfg apm_session_hooks;
 
@@ -350,8 +347,8 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	// Should enable list downloading
-	//csp_bind_callback(param_serve, PARAM_PORT_SERVER);
-	//csp_bind_callback(csp_service_handler, CSP_ANY);
+	csp_bind_callback(param_serve, PARAM_PORT_SERVER);
+	csp_bind_callback(csp_service_handler, CSP_ANY);
 
 	/* Start router */
 	router_start();
@@ -406,7 +403,7 @@ int main(int argc, char *argv[])
 	csp_print("Client started\n");
 
 	csp_socket_t sock = {0};
-	int get_csp_bind_status = csp_bind(&sock, CSP_ANY);
+	int get_csp_bind_status = csp_bind(&sock, UPLOAD_PORT);
 	if (get_csp_bind_status != 0)
 	{
 		printf("\t%s - [ERROR] Unable to bind port %d to socket! %s\n", "\x1B[31m", UPLOAD_PORT, "\x1B[0m");
@@ -437,85 +434,69 @@ int main(int argc, char *argv[])
 			int dport = csp_conn_dport(conn);
 			printf("\t%s - [DEBUG] Connection port: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
 
-			switch (dport)
+			// printf("\t%s - [DEBUG] Received DTP trigger request on UPLOAD_PORT: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
+
+			UploadMetadataItem *metadata;
+			metadata = upload_metadata_item__unpack(NULL, packet->length, packet->data);
+
+			if (metadata == NULL)
 			{
-			case UPLOAD_PORT:
-				printf("\t%s - [DEBUG] Received DTP trigger request on UPLOAD_PORT: %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
-
-				UploadMetadataItem *metadata;
-				metadata = upload_metadata_item__unpack(NULL, packet->length, packet->data);
-
-				if (metadata == NULL)
-				{
-					printf("\t%s - [ERROR] Failed to unpack Protobuf metadata message! %s\n", "\x1B[31m", "\x1B[0m");
-					set_log_param(ERR_PROTOBUF_UNPACK_FAILURE);
-					csp_buffer_free(packet);
-					continue;
-				}
-				else
-				{
-					printf("\t%s - [DEBUG] Received metadata NOT null. %s\n", "\x1B[33m", "\x1B[0m");
-				}
-
-				/* A. Allocate memory for the thread arguments */
-				dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
-				if (!opts)
-				{
-					printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
-					set_log_param(ERR_DTP_OPT_MEM_ALL);
-					upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
-					csp_buffer_free(packet);
-					continue;
-				}
-
-				opts->server = metadata->dtp_server_address;
-				opts->payload_id = metadata->payload_id;
-
-				strncpy(opts->file_src_name, metadata->file_src, sizeof(opts->file_src_name) - 1);
-				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
-
-				strncpy(opts->file_dst_name, metadata->file_dest, sizeof(opts->file_dst_name) - 1);
-				opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
-
-				// You will need to set the other opts fields here too!
-				opts->timeout = 10000;
-				opts->mtu = 256;
-				opts->resume = 0;
-				opts->throughput = 1024;
-
-				upload_metadata_item__free_unpacked(metadata, NULL);
-
-				/* This is very important, else the default no-op hooks will be used */
-				default_session_hooks = apm_session_hooks;
-
-				/* Start the DTP client worker in a new thread */
-				pthread_t dtp_thread;
-				if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
-				{
-					printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
-					set_log_param(ERR_DTP_THREAD_CREATION);
-					free(opts); // Don't forget to free if thread creation fails
-				}
-				else
-				{
-					pthread_detach(dtp_thread); // Allow thread to clean up itself
-				}
-
+				printf("\t%s - [ERROR] Failed to unpack Protobuf metadata message! %s\n", "\x1B[31m", "\x1B[0m");
+				set_log_param(ERR_PROTOBUF_UNPACK_FAILURE);
 				csp_buffer_free(packet);
-				break;
-			
-			case PARAM_PORT: 
-                printf("\t%s - [DEBUG] Handling PARAM Request on port %d. %s\n", "\x1B[33m", dport, "\x1B[0m");
-				// Manually call the param server
-                param_serve(packet);
-                break;
-
-			default:
-				/* For pings and other management traffic, use the service handler */
-				printf("\t%s - [DEBUG] Request on service port %d, passing to handler. %s\n", "\x1B[33m", dport, "\x1B[0m");
-				csp_service_handler(packet);
-				break;
+				continue;
 			}
+			else
+			{
+				printf("\t%s - [DEBUG] Received metadata NOT null. %s\n", "\x1B[33m", "\x1B[0m");
+			}
+
+			/* A. Allocate memory for the thread arguments */
+			dtp_thread_args_t *opts = malloc(sizeof(dtp_thread_args_t));
+			if (!opts)
+			{
+				printf("\t%s - [ERROR] Failed to allocate memory for DTP options! %s\n", "\x1B[31m", "\x1B[0m");
+				set_log_param(ERR_DTP_OPT_MEM_ALL);
+				upload_metadata_item__free_unpacked(metadata, NULL); // Free the unpacked message
+				csp_buffer_free(packet);
+				continue;
+			}
+
+			opts->server = metadata->dtp_server_address;
+			opts->payload_id = metadata->payload_id;
+
+			strncpy(opts->file_src_name, metadata->file_src, sizeof(opts->file_src_name) - 1);
+			opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+
+			strncpy(opts->file_dst_name, metadata->file_dest, sizeof(opts->file_dst_name) - 1);
+			opts->file_dst_name[sizeof(opts->file_dst_name) - 1] = '\0';
+
+			// You will need to set the other opts fields here too!
+			opts->timeout = 10000;
+			opts->mtu = 256;
+			opts->resume = 0;
+			opts->throughput = 1024;
+
+			upload_metadata_item__free_unpacked(metadata, NULL);
+
+			/* This is very important, else the default no-op hooks will be used */
+			default_session_hooks = apm_session_hooks;
+
+			/* Start the DTP client worker in a new thread */
+			pthread_t dtp_thread;
+			if (pthread_create(&dtp_thread, NULL, dtp_client_worker, opts) != 0)
+			{
+				printf("\t%s - [ERROR] Failed to create DTP worker thread! %s\n", "\x1B[31m", "\x1B[0m");
+				set_log_param(ERR_DTP_THREAD_CREATION);
+				free(opts); // Don't forget to free if thread creation fails
+			}
+			else
+			{
+				pthread_detach(dtp_thread); // Allow thread to clean up itself
+			}
+
+			csp_buffer_free(packet);
+			// break;
 		}
 
 		/* Close the connection when done */
