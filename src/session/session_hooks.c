@@ -361,7 +361,10 @@ static void apm_on_deserialize(dtp_t *session, void *ctx)
     if (f)
     {
         uint32_t buffer = 0;
-        fread(&buffer, sizeof(DTP_SESSION_VERSION), 1, f);
+        if (fread(&buffer, sizeof(DTP_SESSION_VERSION), 1, f) == 0)
+        {
+            printf("\t%s - [DEBUG] fread(&buffer, sizeof(DTP_SESSION_VERSION), 1, f) returns 0 %s\n", "\x1B[33m", "\x1B[0m");
+        }
         if (buffer != DTP_SESSION_VERSION)
         {
             dbg_warn("Session was serialized with a different DTP version (read: %u, current version: %u)!", DTP_SESSION_VERSION, buffer);
@@ -380,12 +383,17 @@ static void apm_on_deserialize(dtp_t *session, void *ctx)
             total_freads += fread(&session->request_meta.nof_intervals, sizeof(session->request_meta.nof_intervals), 1, f);
             if (total_freads < expected_session_freads)
             {
-                printf("\t%s - [DEBUG] fread mismatch: %d < %d. %s\n", "\x1B[33m", total_freads, expected_session_freads, "\x1B[0m");
+                printf("\t%s - [DEBUG] fread mismatch: %ld < %ld. %s\n", "\x1B[33m", total_freads, expected_session_freads, "\x1B[0m");
             }
+            total_freads = 0;
             for (uint32_t i = 0; i < session->request_meta.nof_intervals; i++)
             {
-                (void)fread(&session->request_meta.intervals[i].start, sizeof(uint32_t), 1, f);
-                (void)fread(&session->request_meta.intervals[i].end, sizeof(uint32_t), 1, f);
+                total_freads += fread(&session->request_meta.intervals[i].start, sizeof(uint32_t), 1, f);
+                total_freads += fread(&session->request_meta.intervals[i].end, sizeof(uint32_t), 1, f);
+                if (total_freads < 2)
+            {
+                printf("\t%s - [DEBUG] fread (for-loop) mismatch: %ld < 2. %s\n", "\x1B[33m", total_freads, "\x1B[0m");
+            }
                 start = session->request_meta.intervals[i].start;
                 if (session->request_meta.intervals[i].end != 0xffffffff)
                 {
