@@ -69,7 +69,7 @@ void exec_task(const char *filepath)
     if (strcmp(file_header, EXEC_PASSWORD) != 0)
     {
         printf("\t%s - [ERROR] WRONG PASSWORD! Execution denied. %s\n", "\x1B[31m", "\x1B[0m");
-        printf("\t\t%s - [DEBUG] Provided: '%s' %s\n", "\x1B[33m", "\x1B[0m", file_header);
+        printf("\t\t%s - [DEBUG] Provided: '%s' %s\n", "\x1B[33m", file_header, "\x1B[0m");
 
         fclose(fp);
         remove(filepath);
