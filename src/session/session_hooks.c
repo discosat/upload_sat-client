@@ -17,13 +17,10 @@
 
 #include "vmem/vmem_storage.h"
 
-
 #include <ctype.h>
 
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
-
-
 
 static void apm_on_start(dtp_t *session);
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *p);
@@ -140,7 +137,7 @@ int set_dest_addr(char *dst_addr)
     file_dest_path[sizeof(file_dest_path) - 1] = '\0';
 
     // The vmem_t object is vmem_mmap_dtp_upload_data (from VMEM_MMAP_VAR)
-    vmem_mmap_driver_t *driver = (vmem_mmap_driver_t *)vmem_mmap_dtp_upload_data.driver;
+    // vmem_mmap_driver_t *driver = (vmem_mmap_driver_t *)vmem_mmap_dtp_upload_data.driver;
 
     if (file_dest_path == NULL)
     {
@@ -149,7 +146,7 @@ int set_dest_addr(char *dst_addr)
     }
 
     // Update the driver's filename pointer to point to our safe, persistent buffer
-    //driver->filename = strdup(file_dest_path);
+    // driver->filename = strdup(file_dest_path);
 
     return 0;
 }
@@ -175,22 +172,24 @@ static void apm_on_start(dtp_t *session)
     if (!session->hooks.hook_ctx)
     {
         hook_ctx_t *ctx = malloc(sizeof(hook_ctx_t));
-	if (ctx == NULL) return;
+        if (ctx == NULL)
+            return;
         segments_ctx_t *segments = init_segments_ctx();
         ctx->last_packet_ts = 0;
         ctx->segments = segments;
-	// Init file pointer
-	ctx->fp = NULL;
+        // Init file pointer
+        ctx->fp = NULL;
         session->hooks.hook_ctx = ctx;
     }
 
     hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
 
-    if (ctx->fp == NULL && file_dest_path[0] != '\0') 
+    if (ctx->fp == NULL && file_dest_path[0] != '\0')
     {
         // "w+b" creates a new empty file, or truncates existing one, and allows read/write (seeking)
         ctx->fp = fopen(file_dest_path, "wb+");
-        if (ctx->fp == NULL) {
+        if (ctx->fp == NULL)
+        {
             printf("\t%s - [ERROR] Failed to open file: %s %s\n", "\x1B[31m", file_dest_path, "\x1B[0m");
         }
     }
@@ -199,7 +198,7 @@ static void apm_on_start(dtp_t *session)
     /* Grow file to expected session size */
     if (ctx->fp && session->payload_size > sizeof(dummy))
     {
-        //VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
+        // VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
         fseek(ctx->fp, session->payload_size - 1, SEEK_SET);
         fwrite(&dummy, 1, 1, ctx->fp);
         fflush(ctx->fp);
@@ -231,8 +230,8 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
         fwrite(&packet->data32[1], 1, (packet->length - sizeof(uint32_t)), ctx->fp);
     }
 
-    //VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
-    // printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
+    // VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
+    //  printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
     return update_segments(segments, packet_seq);
 }
 
@@ -240,7 +239,8 @@ static void apm_on_end(dtp_t *session)
 {
     hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
     segments_ctx_t *segments = ((hook_ctx_t *)session->hooks.hook_ctx)->segments;
-    if (ctx->fp) {
+    if (ctx->fp)
+    {
         fclose(ctx->fp);
         ctx->fp = NULL;
     }
@@ -275,7 +275,8 @@ static void apm_on_release(dtp_t *session)
     if (session->hooks.hook_ctx != NULL)
     {
         hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
-        if (ctx->fp) {
+        if (ctx->fp)
+        {
             fclose(ctx->fp);
             ctx->fp = NULL;
         }
@@ -290,7 +291,9 @@ static void apm_on_release(dtp_t *session)
 
 static void segment_counter(uint32_t _1, uint32_t _2, uint32_t _3, void *counter)
 {
-    (void)_1; (void)_2; (void)_3;
+    (void)_1;
+    (void)_2;
+    (void)_3;
     *(uint8_t *)counter = *(uint8_t *)counter + 1;
 }
 
@@ -342,6 +345,15 @@ static void apm_on_serialize(dtp_t *session, void *ctx)
 
 static void apm_on_deserialize(dtp_t *session, void *ctx)
 {
+    // Silencing warning (the param ctx is not used; signature only)
+    (void)ctx;
+
+    // Helper variable to keep track of succesfull freads
+    size_t total_freads = 0;
+
+    // Excluding intervals array
+    size_t expected_session_freads = 8;
+
     FILE *f = fopen("dtp_upload_session_meta.bin", "rb");
     segments_ctx_t *segments;
     uint32_t start;
@@ -356,20 +368,24 @@ static void apm_on_deserialize(dtp_t *session, void *ctx)
         }
         else
         {
-            fread(&session->remote_cfg.node, sizeof(session->remote_cfg.node), 1, f);
-            fread(&session->request_meta.mtu, sizeof(session->request_meta.mtu), 1, f);
-            fread(&session->timeout, sizeof(session->timeout), 1, f);
-            fread(&session->request_meta.throughput, sizeof(session->request_meta.throughput), 1, f);
-            fread(&session->request_meta.payload_id, sizeof(session->request_meta.payload_id), 1, f);
-            fread(&session->bytes_received, sizeof(session->bytes_received), 1, f);
-            fread(&session->payload_size, sizeof(session->payload_size), 1, f);
+            total_freads += fread(&session->remote_cfg.node, sizeof(session->remote_cfg.node), 1, f);
+            total_freads += fread(&session->request_meta.mtu, sizeof(session->request_meta.mtu), 1, f);
+            total_freads += fread(&session->timeout, sizeof(session->timeout), 1, f);
+            total_freads += fread(&session->request_meta.throughput, sizeof(session->request_meta.throughput), 1, f);
+            total_freads += fread(&session->request_meta.payload_id, sizeof(session->request_meta.payload_id), 1, f);
+            total_freads += fread(&session->bytes_received, sizeof(session->bytes_received), 1, f);
+            total_freads += fread(&session->payload_size, sizeof(session->payload_size), 1, f);
 
             segments = init_segments_ctx();
-            fread(&session->request_meta.nof_intervals, sizeof(session->request_meta.nof_intervals), 1, f);
+            total_freads += fread(&session->request_meta.nof_intervals, sizeof(session->request_meta.nof_intervals), 1, f);
+            if (total_freads < expected_session_freads)
+            {
+                printf("\t%s - [DEBUG] fread mismatch: %d < %d. %s\n", "\x1B[33m", total_freads, expected_session_freads, "\x1B[0m");
+            }
             for (uint32_t i = 0; i < session->request_meta.nof_intervals; i++)
             {
-                fread(&session->request_meta.intervals[i].start, sizeof(uint32_t), 1, f);
-                fread(&session->request_meta.intervals[i].end, sizeof(uint32_t), 1, f);
+                (void)fread(&session->request_meta.intervals[i].start, sizeof(uint32_t), 1, f);
+                (void)fread(&session->request_meta.intervals[i].end, sizeof(uint32_t), 1, f);
                 start = session->request_meta.intervals[i].start;
                 if (session->request_meta.intervals[i].end != 0xffffffff)
                 {
