@@ -175,11 +175,16 @@ static void apm_on_start(dtp_t *session)
     if (!session->hooks.hook_ctx)
     {
         hook_ctx_t *ctx = malloc(sizeof(hook_ctx_t));
+	if (ctx == NULL) return;
         segments_ctx_t *segments = init_segments_ctx();
         ctx->last_packet_ts = 0;
         ctx->segments = segments;
+	// Init file pointer
+	ctx->fp = NULL;
         session->hooks.hook_ctx = ctx;
     }
+
+    hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
 
     if (ctx->fp == NULL && file_dest_path[0] != '\0') 
     {
@@ -205,6 +210,7 @@ static void apm_on_start(dtp_t *session)
 
 static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
 {
+    hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
     segments_ctx_t *segments = ((hook_ctx_t *)session->hooks.hook_ctx)->segments;
     uint32_t last_ts = ((hook_ctx_t *)session->hooks.hook_ctx)->last_packet_ts;
     uint32_t now = csp_get_ms();
