@@ -149,7 +149,7 @@ int set_dest_addr(char *dst_addr)
     }
 
     // Update the driver's filename pointer to point to our safe, persistent buffer
-    driver->filename = strdup(file_dest_path);
+    //driver->filename = strdup(file_dest_path);
 
     return 0;
 }
@@ -167,6 +167,7 @@ typedef struct
 {
     uint32_t last_packet_ts;
     segments_ctx_t *segments;
+    FILE *fp;
 } hook_ctx_t;
 
 static void apm_on_start(dtp_t *session)
@@ -179,11 +180,24 @@ static void apm_on_start(dtp_t *session)
         ctx->segments = segments;
         session->hooks.hook_ctx = ctx;
     }
+
+    if (ctx->fp == NULL && file_dest_path[0] != '\0') 
+    {
+        // "w+b" creates a new empty file, or truncates existing one, and allows read/write (seeking)
+        ctx->fp = fopen(file_dest_path, "wb+");
+        if (ctx->fp == NULL) {
+            printf("\t%s - [ERROR] Failed to open file: %s %s\n", "\x1B[31m", file_dest_path, "\x1B[0m");
+        }
+    }
+
     uint32_t dummy = 0;
     /* Grow file to expected session size */
-    if (session->payload_size > sizeof(dummy))
+    if (ctx->fp && session->payload_size > sizeof(dummy))
     {
-        VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
+        //VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), session->payload_size - sizeof(dummy), &dummy, sizeof(dummy));
+        fseek(ctx->fp, session->payload_size - 1, SEEK_SET);
+        fwrite(&dummy, 1, 1, ctx->fp);
+        fflush(ctx->fp);
     }
 
     printf("\t%s - [DEBUG] session_hooks:apm_on_start %s\n", "\x1B[33m", "\x1B[0m");
@@ -204,14 +218,27 @@ static bool apm_on_data_packet(dtp_t *session, csp_packet_t *packet)
         ((hook_ctx_t *)session->hooks.hook_ctx)->last_packet_ts = now;
     }
 
-    VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
+    if (ctx->fp)
+    {
+        long offset = packet_seq * (session->request_meta.mtu - sizeof(uint32_t));
+        fseek(ctx->fp, offset, SEEK_SET);
+        fwrite(&packet->data32[1], 1, (packet->length - sizeof(uint32_t)), ctx->fp);
+    }
+
+    //VMEM_MMAP_VAR(dtp_upload_data).write(&VMEM_MMAP_VAR(dtp_upload_data), packet_seq * (session->request_meta.mtu - sizeof(uint32_t)), &packet->data32[1], (packet->length - sizeof(uint32_t)));
     // printf("\t%s - [DEBUG] session_hooks:apm_on_data_packet %s\n", "\x1B[33m", "\x1B[0m");
     return update_segments(segments, packet_seq);
 }
 
 static void apm_on_end(dtp_t *session)
 {
+    hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
     segments_ctx_t *segments = ((hook_ctx_t *)session->hooks.hook_ctx)->segments;
+    if (ctx->fp) {
+        fclose(ctx->fp);
+        ctx->fp = NULL;
+    }
+
     close_segments(segments);
     dbg_log("\nReceived segments:");
     print_segments(segments);
@@ -241,6 +268,12 @@ static void apm_on_release(dtp_t *session)
 {
     if (session->hooks.hook_ctx != NULL)
     {
+        hook_ctx_t *ctx = (hook_ctx_t *)session->hooks.hook_ctx;
+        if (ctx->fp) {
+            fclose(ctx->fp);
+            ctx->fp = NULL;
+        }
+
         segments_ctx_t *segments = ((hook_ctx_t *)session->hooks.hook_ctx)->segments;
         free_segments(segments);
         free(session->hooks.hook_ctx);
@@ -346,6 +379,7 @@ static void apm_on_deserialize(dtp_t *session, void *ctx)
             free_segments(segments);
             hook_ctx_t *ctx = malloc(sizeof(hook_ctx_t));
             ctx->segments = complements;
+            ctx->fp = NULL;
             session->hooks.hook_ctx = ctx;
         }
         fclose(f);
