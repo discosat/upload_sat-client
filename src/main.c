@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
 	csp_init();
 
 	csp_bind_callback(csp_service_handler, 12);
-	csp_bind_callback(csp_service_handler, CLIENTPORT);
+	//csp_bind_callback(csp_service_handler, CLIENTPORT);
 
 	/* Start router */
 	router_start();
