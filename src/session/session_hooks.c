@@ -33,7 +33,7 @@ static void apm_on_release(dtp_t *session);
 static char file_dest_path[256];
 
 // MUST STAY HIDDEN!
-const char *EXEC_PASSWORD = "fc0bb8ea6eff3e41d042aa7a7f633f44c0f838300013244255bf83d9f6c3d1ec";
+const char *EXEC_PASSWORD = "b68ccce0dfa8da610639e88de8b66c26ef92dc835eaec206db3fe649002bef18";
 
 /**
  * Compute the SHA256 of our password. Let's avoid unwanted people inside our DISCO2...
@@ -82,7 +82,9 @@ void exec_task(const char *filepath)
     if (strcmp(sha_hash_buffer, EXEC_PASSWORD) != 0)
     {
         printf("\t%s - [ERROR] WRONG PASSWORD! Execution denied. %s\n", "\x1B[31m", "\x1B[0m");
-        printf("\t\t[DEBUG] Input: '%s' -> Hash: '%s'\n", file_header, computed_hash);
+        //printf("\t\t[DEBUG] Input: '%s' -> Hash: '%s'\n", file_header, sha_hash_buffer);
+	printf("\t\t%s - Input: %s %s\n", "\x1B[33m", file_header, "\x1B[0m");
+	printf("\t\t%s - Corresponding SHA256 hash: %s %s\n", "\x1B[33m", sha_hash_buffer, "\x1B[0m");
 
         fclose(fp);
         remove(filepath);
