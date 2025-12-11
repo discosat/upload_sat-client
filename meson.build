@@ -33,7 +33,8 @@ dtp_client_dep = dependency('dtp_client', fallback: ['dtp', 'dtp_client_dep'], r
 proto_c_dep = dependency('libprotobuf-c', fallback: ['protobuf-c', 'proto_c_dep'])
 param_dep = dependency('param', fallback : ['param', 'param_dep']).as_link_whole()
 slash_dep = dependency('slash', fallback: ['slash', 'slash_dep'], required: false).partial_dependency(links: false, includes: true)
-deps = [csp_dep, dtp_client_dep, proto_c_dep, param_dep, slash_dep, m_dep]
+openssl_dep = dependency('openssl', required: true)
+deps = [csp_dep, dtp_client_dep, proto_c_dep, param_dep, slash_dep, m_dep, openssl_dep]
 
 c_args = ['-DHOSTNAME="@0@"'.format(get_option('hostname'))]
 
