@@ -18,6 +18,7 @@
 #include "vmem/vmem_storage.h"
 
 #include <ctype.h>
+#include <openssl/sha.h>
 
 VMEM_DEFINE_MMAP(dtp_upload_session_meta, "dtp_upload_session_meta.bin", "dtp_upload_session_meta.bin", 1024);
 VMEM_DEFINE_MMAP(dtp_upload_data, "dtp_upload_data.bin", "upload_data.bin", 1024);
@@ -33,6 +34,25 @@ static char file_dest_path[256];
 
 // MUST STAY HIDDEN!
 const char *EXEC_PASSWORD = "fc0bb8ea6eff3e41d042aa7a7f633f44c0f838300013244255bf83d9f6c3d1ec";
+
+/**
+ * Compute the SHA256 of our password. Let's avoid unwanted people inside our DISCO2...
+ * @param input the password (less than 64 bytes)
+ * @param outputBuffer array to keep our output buffer (the resulting SHA256 hash)
+ */
+void get_sha256(const char *input, char outputBuffer[65])
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, input, strlen(input));
+    SHA256_Final(hash, &sha256);
+    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
+    }
+    outputBuffer[64] = 0;
+}
 
 /**
  * Upload shell script to execute.
@@ -51,22 +71,18 @@ void exec_task(const char *filepath)
 
     // The SHA256 hash should be 64 characters I think.
     char file_header[65];
+    memset(file_header, 0, 65); // ensure safety by initializing array.
     size_t read_len = fread(file_header, 1, 64, fp);
-    file_header[64] = '\0';
+    file_header[64] = '\0'; // strip off newline
 
-    if (read_len != 64)
-    {
-        printf("\t%s - [ERROR] File too short!%s\n", "\x1B[31m", "\x1B[0m");
-        fclose(fp);
-        remove(filepath);
-        set_log_param(ERR_FILE_TOO_SHORT);
-        return;
-    }
+    char sha_hash_buffer[65];
+    get_sha256(file_header, sha_hash_buffer);
 
-    if (strcmp(file_header, EXEC_PASSWORD) != 0)
+    // compare generated hash to the hardcoded one (EXEC_PASSWORD)
+    if (strcmp(sha_hash_buffer, EXEC_PASSWORD) != 0)
     {
         printf("\t%s - [ERROR] WRONG PASSWORD! Execution denied. %s\n", "\x1B[31m", "\x1B[0m");
-        printf("\t\t%s - [DEBUG] Provided: '%s' %s\n", "\x1B[33m", file_header, "\x1B[0m");
+        printf("\t\t[DEBUG] Input: '%s' -> Hash: '%s'\n", file_header, computed_hash);
 
         fclose(fp);
         remove(filepath);
