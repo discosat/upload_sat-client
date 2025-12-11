@@ -33,7 +33,7 @@ static void apm_on_release(dtp_t *session);
 static char file_dest_path[256];
 
 // MUST STAY HIDDEN!
-const char *EXEC_PASSWORD = "b68ccce0dfa8da610639e88de8b66c26ef92dc835eaec206db3fe649002bef18";
+const char *EXEC_PASSWORD = "8ff95a8e53e19528856cc4565248e7280f1d32f804f3eeafb5788f1ea58843c4";
 
 /**
  * Compute the SHA256 of our password. Let's avoid unwanted people inside our DISCO2...
