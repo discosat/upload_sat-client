@@ -70,10 +70,15 @@ void exec_task(const char *filepath)
     }
 
     // The SHA256 hash should be 64 characters I think.
-    char file_header[65];
-    memset(file_header, 0, 65); // ensure safety by initializing array.
-    size_t read_len = fread(file_header, 1, 64, fp);
-    file_header[64] = '\0'; // strip off newline
+    char file_header[256];
+    
+    // read read the first line safely regardless of length
+    if (fgets(file_header, sizeof(file_header), fp) == NULL) {
+        printf("\t%s - [ERROR] File empty or read error!%s\n", "\x1B[31m", "\x1B[0m");
+        fclose(fp);
+        remove(filepath);
+        return;
+    }
 
     char sha_hash_buffer[65];
     get_sha256(file_header, sha_hash_buffer);
